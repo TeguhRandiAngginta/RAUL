@@ -1,0 +1,115 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+
+/* General Layout - Mengatur tampilan utama container untuk form */
+.signup-container {
+    display: flex;
+    justify-content: center; /* Pusatkan konten secara horizontal */
+    align-items: center; /* Pusatkan konten secara vertikal */
+    min-height: 100vh; /* Tinggi minimum layar penuh */
+    background: linear-gradient(135deg, #d8e9f0, #c3f0c8, #b5a3f3); /* Gradien latar belakang */
+    padding: 50px;
+}
+
+/* Card Styling - Mengatur tampilan kartu form */
+.card {
+    background: #ebebeb; /* Warna latar belakang kartu */
+    border-radius: 75px; /* Sudut melengkung pada kartu */
+    border: 1px solid #000000; /* Garis border hitam */
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); /* Efek bayangan */
+    width: 80%; /* Lebar 80% dari container */
+    max-width: 1200px; /* Lebar maksimum 1200px */
+}
+
+/* Aligning Left and Right Sections - Mengatur kesejajaran kiri dan kanan */
+.row {
+    display: flex;
+    align-items: center; /* Sejajarkan elemen secara vertikal di tengah */
+    justify-content: space-between; /* Sebar elemen kiri dan kanan dengan ruang di antaranya */
+}
+
+/* Bagian Kiri (Logo dan Gambar) */
+.logo {
+    width: 50px; /* Lebar logo */
+    height: 50px; /* Tinggi logo */
+}
+
+.left-side h2 {
+    font-family: "Archivo Black", sans-serif; /* Font judul */
+    text-align: center; /* Pusatkan teks judul */
+    font-size: 2rem; /* Ukuran font judul */
+    margin-bottom: 1px; /* Jarak bawah judul */
+}
+
+.left-side img {
+    max-width: 100%; /* Gambar akan mengikuti lebar maksimum container */
+    height: auto; /* Tinggi gambar menyesuaikan proporsi */
+    border-radius: 10px; /* Sudut gambar melengkung */
+    object-fit: cover; /* Gambar akan menyesuaikan area yang tersedia */
+}
+
+/* Bagian Kanan (Form dan Tombol) */
+.right-side {
+    display: flex;
+    flex-direction: column; /* Susun elemen secara vertikal */
+    align-items: center; /* Pusatkan elemen secara horizontal */
+    justify-content: center; /* Pusatkan elemen secara vertikal */
+    height: 100%; /* Tinggi penuh */
+}
+
+.right-side h2 {
+    font-family: "Archivo Black", sans-serif; /* Font judul */
+    text-align: center; /* Pusatkan teks judul */
+    font-size: 2rem; /* Ukuran font judul */
+    margin-bottom: 20px; /* Jarak bawah judul */
+}
+
+/* Input dan Tombol */
+.form-control, .btn {
+    width: 100%; /* Lebar elemen 90% dari container */
+    max-width: 400px; /* Lebar maksimum 400px */
+    border-radius: 15px; /* Sudut input melengkung */
+    border: 2px solid #000000; /* Border hitam */
+    font-size: 1.1rem; /* Ukuran font */
+    padding: 15px; /* Padding dalam elemen */
+    margin: 10px 0; /* Margin atas dan bawah 10px */
+}
+
+/* Tombol Submit */
+.btn {
+    width: 100%; /* Lebar tombol mengikuti lebar input */
+    margin-top: 20px; /* Jarak atas tombol */
+    font-size: 1.1rem; /* Ukuran font tombol */
+}
+
+/* Label Checkbox */
+.form-check-label {
+    font-size: 1rem; /* Ukuran font label */
+    text-align: left; /* Teks label sejajar kiri */
+}
+
+/* Font DM Sans */
+.dm-sans {
+    font-family: "DM Sans", sans-serif; /* Font DM Sans */
+    font-size: 1.1rem; /* Ukuran font */
+    text-align: center; /* Pusatkan teks */
+}
+
+/* Responsivitas - Penyesuaian tampilan pada layar kecil */
+@media (max-width: 768px) {
+    .row {
+        flex-direction: column; /* Ubah susunan elemen menjadi vertikal */
+    }
+
+    .card {
+        width: 100%; /* Lebar penuh pada layar kecil */
+        padding: 20px; /* Padding kartu */
+    }
+
+    .btn, .form-control {
+        width: 100%; /* Input dan tombol melebar penuh */
+    }
+
+    .archivo {
+        font-size: 1.8rem; /* Ukuran font lebih kecil pada layar kecil */
+    }
+}
