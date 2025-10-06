@@ -35,7 +35,9 @@ const Header = () => {
 
             {/* Login / Register */}
             <div className="d-flex align-items-center">
-            <span className="me-2 fw-bold">LOGIN / REGISTER</span>
+                <Nav.Link href="signin">LOGIN</Nav.Link>
+                <span>/</span>
+                <Nav.Link href="signup">REGISTER</Nav.Link>
             <FaUserCircle size={30} />
             </div>
         </Container>
