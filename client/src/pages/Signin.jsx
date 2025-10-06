@@ -35,7 +35,7 @@ export default function Signin() {
                     <Col md={6} className="text-center left-side">
                         <div className="d-flex justify-content-center align-items-center mb-3 mt-3">
                             <Image src={logo} roundedCircle className="logo me-2 mb-2" />
-                            <h2 className="mb-1 archivo title-logo title-form align-title">Not Books</h2>
+                            <h2 className="mb-1 archivo title-logo title-form align-title">RAUL</h2>
                         </div>
                         <div className="d-flex justify-content-center">
                             <Image src={img} rounded className="log1" />
@@ -45,7 +45,7 @@ export default function Signin() {
                     {/* Right Side */}
                     <Col md={6} className="right-side">
                         <Form onSubmit={handleSubmit(doSubmit)} className="text-center">
-                            <h2 className="mb-4 archivo title-form align-title">Masuk Akun 404</h2>
+                            <h2 className="mb-4 archivo title-form align-title">Masuk Akun RAUL</h2>
 
                             {/* Email Field */}
                             <FloatingLabel controlId="floatingInput" label="Email" className="mb-3">

@@ -53,7 +53,7 @@ export default function Signup() {
                     <Col md={6} className="text-center left-side">
                         <div className="d-flex justify-content-center align-items-center mb-3 mt-3">
                             <Image src={logo} roundedCircle className="logo me-2 mb-2" />
-                            <h2 className="mb-1 archivo title-logo title-form align-title">Not Books</h2>
+                            <h2 className="mb-1 archivo title-logo title-form align-title">RAUL</h2>
                         </div>
                         <div className="d-flex justify-content-center">
                             <Image src={img} rounded className="log1" />
@@ -63,7 +63,7 @@ export default function Signup() {
                     {/* Right Side */}
                     <Col md={6} className="right-side">
                         <Form onSubmit={handleSubmit(doSubmit)} className="text-center">
-                            <h2 className="mb-4 archivo title-form align-title">Daftar Akun 404</h2>
+                            <h2 className="mb-4 archivo title-form align-title">Daftar Akun RAUL</h2>
 
                             {/* Email Field */}
                             <FloatingLabel controlId="floatingInput" label="Email" className="mb-3">
@@ -126,7 +126,7 @@ export default function Signup() {
                                         <a href="privacy-policy" className="link-dark">
                                             <b>kebijakan privasi</b>
                                         </a>{' '}
-                                        404 Not Books
+                                        RAUL
                                     </span>
                                 }
                                 className="mb-3"
@@ -139,7 +139,7 @@ export default function Signup() {
                             <Button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className="btn btn-info mt-2 wide-button dm-sans"
+                                className="btn btn-info mt-2 wide-button dm-sans mb-3"
                             >
                                 {isSubmitting ? 'Loading...' : <strong>Daftar</strong>}
                             </Button>
