@@ -6,16 +6,20 @@
     justify-content: center; /* Pusatkan konten secara horizontal */
     align-items: center; /* Pusatkan konten secara vertikal */
     min-height: 100vh; /* Tinggi minimum layar penuh */
-    background: linear-gradient(135deg, #d8e9f0, #c3f0c8, #b5a3f3); /* Gradien latar belakang */
+    background: linear-gradient(135deg,
+    #FAF7F3 0%,
+    #F5ECE0 40%,
+    #E6D4BB 75%,
+    #D9A299 100%); /* Gradien latar belakang */
     padding: 50px;
 }
 
 /* Card Styling - Mengatur tampilan kartu form */
 .card {
-    background: #ebebeb; /* Warna latar belakang kartu */
-    border-radius: 75px; /* Sudut melengkung pada kartu */
-    border: 1px solid #000000; /* Garis border hitam */
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); /* Efek bayangan */
+    background: #F8F1E9;
+    border-radius: 75px;
+    border: 1px solid #000000;
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.15);
     width: 80%; /* Lebar 80% dari container */
     max-width: 1200px; /* Lebar maksimum 1200px */
 }
@@ -112,4 +116,87 @@
     .archivo {
         font-size: 1.8rem; /* Ukuran font lebih kecil pada layar kecil */
     }
+}
+
+/* Konsistensi tampilan antara Signin dan Signup */
+.right-side .form-floating {
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.right-side .btn {
+    max-width: 400px;
+}
+
+button.dm-sans {
+    font-family: "DM Sans", sans-serif;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    }
+
+button.dm-sans:hover {
+    background-color: #B08968;
+    color: #fff;
+    border-color: #B08968;
+}
+
+.back-button {
+    background-color: #f0e4d3; /* Warna dasar tombol */
+    border: none;
+    color: #3e2f1c;
+    font-weight: 600;
+    padding: 10px 30px;
+    border-radius: 10px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.back-button:hover {
+    background-color: #dcc5b2;
+    color: #2a1f11;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+}
+
+/* Hilangkan warna biru saat klik / fokus */
+.back-button:active,
+.back-button:focus {
+    background-color: #d9a299 !important; /* Warna sedikit lebih gelap dari hover */
+    color: #2a1f11 !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25) inset !important;
+    outline: none !important;
+    border: none !important;
+    transform: translateY(0);
+}
+
+/* Tombol utama seperti "Daftar" dan "Masuk" */
+.btn-info {
+    background-color: #dcc5b2 !important; /* Warna hangat */
+    border: none !important;
+    color: #3a2a1a !important; /* Warna teks gelap agar kontras */
+    font-weight: 600;
+    padding: 10px 30px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Saat hover */
+.btn-info:hover {
+    background-color: #d9a299 !important; /* Warna sedikit lebih gelap */
+    color: #2a1f11 !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    transform: translateY(-2px);
+}
+
+/* Saat diklik / aktif */
+.btn-info:active,
+.btn-info:focus {
+    background-color: #c9958b !important; /* Tone lembut lebih gelap */
+    color: #2a1f11 !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+    outline: none !important;
+    border: none !important;
+    transform: translateY(0);
 }
