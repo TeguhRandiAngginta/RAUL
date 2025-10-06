@@ -8,6 +8,7 @@ import ForgetPassword from './pages/ForgetPassword';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import AdminDashboard from './pages/AdminDashboard';
 import Header from './component/Navbar';
+import MovieDetail from "./pages/MovieDetail";
 
 function AppContent() {
   const location = useLocation()
@@ -26,6 +27,7 @@ function AppContent() {
         <Route path="/forget-password" element={<ForgetPassword />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/movie/:id" element={<MovieDetail />} />
 
       </Routes>
     </>
