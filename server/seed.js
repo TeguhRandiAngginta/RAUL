@@ -9,21 +9,12 @@ const users = [
         email: 'hhaerriats@gmail.com',
         password: await bcrypt.hash('hhhrest17',10),
         role: 'admin',
-        gender: 'pria',
-        boa: '2003-02-05',
-        address: 'lhokseumawe',
-        phone: '089288997861',
     },
-    {
+        {
         username: 'Randi',
-        email: 'randi123@gmail.com',
-        password: await bcrypt.hash('randi12345',10),
-        role: 'admin',
-        gender: 'pria',
-        boa: '2004-10-19',
-        address: 'lhokseumawe',
-        phone: '081298990861',
-    },
+        email: 'Randi@gmail.com',
+        password: await bcrypt.hash('Teguh127',10),
+    }
 ];
 
 //otomatis memberikan role customer

@@ -5,8 +5,8 @@ import Button from 'react-bootstrap/Button';
 export default function Home() {
     return (
         <div className="p-4">
-            <h1>Home</h1>
-            <Button className="btn btn-success">Click me</Button>
+            <h1>Proses</h1>
+            <Button className="btn btn-success">Harap bersabar</Button>
         </div>
     );
 }
