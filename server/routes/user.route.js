@@ -5,6 +5,7 @@ import{
     getUser,
     updateUser,
     deleteUser,
+    getUserProfile
 } from  '../controllers/user.controller.js';
 import { authenticateToken } from '../configs/middleware.js';
 import { getUserProfile } from '../controllers/user.controller.js';
@@ -16,7 +17,7 @@ router.get('/profile', authenticateToken, getUserProfile);
 
 router.get('/', getUsers);
 router.get('/:id', getUser);
-router.patch('/update/:id', updateUser);
-router.delete('/delete/:id', deleteUser);
+router.patch('/update/:id', authenticateToken, updateUser);
+router.delete('/delete/:id', authenticateToken, deleteUser);
 
 export default router;
