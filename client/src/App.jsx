@@ -8,22 +8,18 @@ import ForgetPassword from './pages/ForgetPassword';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import AdminDashboard from './pages/AdminDashboard';
 import Header from './component/Navbar';
-import Footer from './component/Footer';
+import MovieDetail from "./pages/MovieDetail";
 
 function AppContent() {
-  const location = useLocation();
-  
-  // routes tanpa header & footer
-  const hideLayoutRoutes = ['/signin', '/signup', '/forget-password', '/privacy-policy'];
+  const location = useLocation()
+  //tanpa navbar
+  const hideNavbarRoutes = ['/signin', '/signup', '/forget-password', '/privacy-policy'];
 
   return (
     <>
       <Toaster position="top-center" />
+      {!hideNavbarRoutes.includes(location.pathname) && <Header />}
 
-      {/* Header */}
-      {!hideLayoutRoutes.includes(location.pathname) && <Header />}
-
-      {/* Routes */}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/signin" element={<SignIn />} />
@@ -31,10 +27,9 @@ function AppContent() {
         <Route path="/forget-password" element={<ForgetPassword />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
-      </Routes>
+        <Route path="/movie/:id" element={<MovieDetail />} />
 
-      {/* Footer */}
-      {!hideLayoutRoutes.includes(location.pathname) && <Footer />}
+      </Routes>
     </>
   );
 }
