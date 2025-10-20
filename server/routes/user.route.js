@@ -8,7 +8,6 @@ import{
     getUserProfile
 } from  '../controllers/user.controller.js';
 import { authenticateToken } from '../configs/middleware.js';
-import { getUserProfile } from '../controllers/user.controller.js';
 
 const router = express.Router();
 
