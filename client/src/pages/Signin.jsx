@@ -11,6 +11,9 @@ import Image from 'react-bootstrap/Image';
 import logo from '../assets/logo/logoWeb.png';
 import img from '../assets/logo/log1.png';
 import { useForm } from 'react-hook-form';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../App'; // Sesuaikan path jika perlu
+import axios from 'axios';
 import './style.css'; // Import external CSS
 
 export default function Signin() {
@@ -20,8 +23,33 @@ export default function Signin() {
         formState: { errors, isSubmitting },
     } = useForm();
 
-    const doSubmit = async () => {
-        toast.success('Sign in Successful');
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { login } = useAuth();
+
+    const doSubmit = async (data) => {
+        try {
+            const res = await axios.post('http://localhost:5000/api/v1/auth/login', {
+                email: data.email,
+                password: data.password,
+            }, {
+                withCredentials: true, // Izinkan cookie dari backend
+            });
+
+            if (res.status === 200) {
+                // Panggil fungsi login dari AuthContext
+                await login(data.email, data.password);
+                toast.success('Sign in Successful');
+
+                // Arahkan ke halaman sebelumnya atau ke halaman utama jika tidak ada
+                const from = location.state?.from?.pathname || '/';
+                navigate(from, { replace: true });
+            } else {
+                toast.error('Login gagal. Periksa email atau kata sandi.');
+            }
+        } catch (error) {
+            toast.error('Terjadi kesalahan: ' + (error.response?.data?.message || error.message));
+        }
     };
 
     return (
@@ -72,11 +100,11 @@ export default function Signin() {
                                 )}
                             </FloatingLabel>
                             <div className='text-end'>
-                            <span className="dm-sans">
-                                <a href="forget-password" className="link-dark">
-                                    <b> Lupa Password</b>
-                                </a>
-                            </span>
+                                <span className="dm-sans">
+                                    <a href="/forget-password" className="link-dark">
+                                        <b>Lupa Password</b>
+                                    </a>
+                                </span>
                             </div>
 
                             <Button
@@ -88,7 +116,7 @@ export default function Signin() {
                             </Button>
                             <p className="mt-3 mb-5 dm-sans">
                                 Belum Punya Akun?{' '}
-                                <a href="signup" className="link-dark">
+                                <a href="/signup" className="link-dark">
                                     <b>Daftar</b>
                                 </a>
                             </p>

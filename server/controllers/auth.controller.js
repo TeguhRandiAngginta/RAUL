@@ -34,7 +34,7 @@ export const signup = async (req, res, next) => {
         user._id = insertedId;
         const { password: pass, updatedAt, createdAt, ...rest } = user;
         res
-            .cookie('taskly_token', token, { httpOnly: true })
+            .cookie('raul_token', token, { httpOnly: true })
             .status(200)
             .json(rest);
     } catch (error) {
@@ -52,7 +52,7 @@ export const login = async (req, res, next) => {
         const token = jwt.sign({ id: user._id }, process.env.AUTH_SECRET);
         const { username } = user;
         res
-            .cookie('taskly_token', token, { httpOnly: true })
+            .cookie('raul_token', token, { httpOnly: true })
             .status(200)
             .json({ username });
     } catch (error) {

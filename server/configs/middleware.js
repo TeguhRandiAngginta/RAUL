@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 
 export const authenticateToken = (req, res, next) => {
-    const token = req.cookies.taskly_token || req.header('Authorization')?.split(' ')[1];
+    const token = req.cookies.raul_token || req.header('Authorization')?.split(' ')[1];
     if (!token) return res.sendStatus(401);
 
     jwt.verify(token, process.env.AUTH_SECRET, (err, user) => {
