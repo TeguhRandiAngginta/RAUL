@@ -98,6 +98,80 @@
     text-align: center; /* Pusatkan teks */
 }
 
+/* Navbar Styling */
+.navbar-fixed {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.logo-brand {
+    font-family: "Archivo Black", sans-serif;
+    color: #3a2a1a;
+}
+
+.nav-links .nav-link {
+    font-family: "DM Sans", sans-serif;
+    font-size: 1.1rem;
+    margin-left: 15px;
+    color: #3a2a1a;
+    transition: color 0.3s ease;
+}
+
+.nav-links .nav-link:hover {
+    color: #d9a299;
+}
+
+.login-btn {
+    font-family: "DM Sans", sans-serif;
+    padding: 8px 20px;
+    font-size: 1rem;
+}
+
+.profile-icon {
+    color: #3a2a1a;
+    transition: transform 0.3s ease;
+}
+
+.profile-icon:hover {
+    transform: scale(1.1);
+}
+
+.seach-bar-container {
+    width: 40%;
+    margin: 0 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 200px;
+}
+
+.input-wrapper {
+    background-color: white;
+    width: 100%;
+    border-radius: 10px;
+    height: 2.5rem;
+    padding: 0 15px;
+    box-shadow: 0px 0px 8px #ddd;
+    display: flex;
+    align-items: center;
+}
+
+.inputsearch {
+    background-color: transparent;
+    border: none;
+    height: 100%;
+    font-size: 1.25rem;
+    width: 100%;
+    margin-left: 5px;
+}
+
+.inputsearch:focus {
+    outline: none;
+}
+
 /* Responsivitas - Penyesuaian tampilan pada layar kecil */
 @media (max-width: 768px) {
     .row {
@@ -116,6 +190,24 @@
     .archivo {
         font-size: 1.8rem; /* Ukuran font lebih kecil pada layar kecil */
     }
+
+    .logo-brand {
+        display: none; /* Sembunyikan logo RAUL di tampilan mobile */
+    }
+
+    .seach-bar-container {
+        width: 100%;
+        margin: 10px 0;
+    }
+
+    .nav-links .nav-link {
+        margin: 10px 0;
+        text-align: center;
+    }
+
+    .login-btn {
+        margin: 10px 0;
+    }
 }
 
 /* Konsistensi tampilan antara Signin dan Signup */
@@ -133,7 +225,7 @@ button.dm-sans {
     font-family: "DM Sans", sans-serif;
     font-size: 1rem;
     transition: all 0.3s ease;
-    }
+}
 
 button.dm-sans:hover {
     background-color: #B08968;
