@@ -11,6 +11,8 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import AdminDashboard from './pages/AdminDashboard';
 import Header from './component/Navbar';
 import Footer from './component/Footer';
+import MovieDetail from './pages/MovieDetail';
+
 
 // Auth Context
 const AuthContext = createContext();
@@ -76,6 +78,7 @@ function AppContent() {
           <Route path="/forget-password" element={<ForgetPassword />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          <Route path="/movie/:id" element={<MovieDetail />} />
         </Routes>
       </main>
       {!hideLayoutRoutes.includes(location.pathname) && <Footer />}
