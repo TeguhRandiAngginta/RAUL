@@ -25,7 +25,7 @@ function AppContent() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token'); // Ambil token dari localStorage
+    const token = getCookie('raul_token'); // Fungsi untuk membaca cookie
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       fetchProfile(token);
@@ -36,10 +36,10 @@ function AppContent() {
 
   const fetchProfile = async (token) => {
     try {
-      const res = await axios.get('http://localhost:5000/api/v1/users/profile');
-      setUser({ username: res.data.username }); // Hanya ambil username
+      const res = await axios.get('http://localhost:5000/api/v1/users/profile', { withCredentials: true });
+      setUser({ username: res.data.username });
     } catch (error) {
-      localStorage.removeItem('token');
+      removeCookie('raul_token'); // Hapus cookie jika token invalid
       delete axios.defaults.headers.common['Authorization'];
     } finally {
       setIsLoading(false);
@@ -47,15 +47,15 @@ function AppContent() {
   };
 
   const login = async (email, password) => {
-    const res = await axios.post('http://localhost:5000/api/v1/auth/login', { email, password });
-    localStorage.setItem('token', res.data.token); // Simpan token di localStorage
-    axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
-    setUser({ username: res.data.username });
+    const res = await axios.post('http://localhost:5000/api/v1/auth/login', { email, password }, { withCredentials: true });
+    if (res.status === 200) {
+      setUser({ username: res.data.username });
+    }
     return res.data;
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    removeCookie('raul_token');
     delete axios.defaults.headers.common['Authorization'];
     setUser(null);
   };
@@ -81,6 +81,19 @@ function AppContent() {
       {!hideLayoutRoutes.includes(location.pathname) && <Footer />}
     </AuthContext.Provider>
   );
+}
+
+// Fungsi utilitas untuk membaca cookie
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+}
+
+// Fungsi utilitas untuk menghapus cookie
+function removeCookie(name) {
+  document.cookie = `${name}=; Max-Age=0; path=/`;
 }
 
 export default function App() {

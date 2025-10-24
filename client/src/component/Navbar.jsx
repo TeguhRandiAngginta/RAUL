@@ -2,13 +2,14 @@ import React, { useState } from "react";
 import { Navbar, Nav, Container } from "react-bootstrap";
 import { FaSearch } from "react-icons/fa";
 import { useAuth } from '../App';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import "../pages/style.css";
 
 const Header = () => {
     const [input, setInput] = useState("");
     const { user, logout } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const handleLogout = () => {
         logout();
@@ -50,18 +51,21 @@ const Header = () => {
                     {/* Login or Username */}
                     <div className="d-flex align-items-center ms-auto">
                         {user ? (
-                            <>
-                                <Nav.Link 
-                                    as={Link} 
-                                    to="/" 
-                                    className="btn btn-info login-btn"
-                                    onClick={handleLogout}
-                                >
-                                    {user.username}
-                                </Nav.Link>
-                            </>
+                            <Nav.Link 
+                                as={Link} 
+                                to="/" 
+                                className="btn btn-info login-btn"
+                                onClick={handleLogout}
+                            >
+                                {user.username}
+                            </Nav.Link>
                         ) : (
-                            <Nav.Link as={Link} to="/signin" className="btn btn-info login-btn">
+                            <Nav.Link 
+                                as={Link} 
+                                to="/signin" 
+                                state={{ from: location.pathname }} 
+                                className="btn btn-info login-btn"
+                            >
                                 LOGIN
                             </Nav.Link>
                         )}
