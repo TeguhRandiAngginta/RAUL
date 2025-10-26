@@ -38,7 +38,11 @@ export default function Signup() {
                 toast.error(data.message);
             }
         } catch (error) {
-            toast.error('Something went wrong');
+            let errorMessage = 'Something went wrong';
+            if (error instanceof Error) {
+                errorMessage = error.message;
+            }
+            toast.error(errorMessage);
         }
     };
 
