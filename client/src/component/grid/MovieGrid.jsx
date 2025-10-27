@@ -1,61 +1,93 @@
 import React, { useEffect, useState } from "react";
-import { Container, Row, Col, Card, Button, Spinner } from "react-bootstrap";
+import { Card, Spinner } from "react-bootstrap";
 import { StarFill } from "react-bootstrap-icons";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination, EffectCoverflow } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
 import "../../styles/movieGrid.css";
 
 export default function MovieGrid() {
     const [movies, setMovies] = useState([]);
-    const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(true);
+    const apiKey = import.meta.env.VITE_TMDB_API_KEY;
 
     useEffect(() => {
-        setLoading(true);
-        fetch(`https://api.themoviedb.org/3/movie/popular?api_key=15050283b30a09e0018841fd5769b73b&language=id-ID&page=${page}`)
-            .then((res) => res.json())
-            .then((data) => setMovies(data.results))
-            .catch((err) => console.error("Error fetching movies:", err))
-            .finally(() => setLoading(false));
-    }, [page]);
+        const fetchMovies = async () => {
+            try {
+                const res = await fetch(
+                    `https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&language=id-ID&page=1`
+                );
+                const data = await res.json();
+                if (data && data.results) {
+                    setMovies(data.results);
+                } else {
+                    console.error("Invalid data format:", data);
+                }
+            } catch (error) {
+                console.error("Error fetching movies:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchMovies();
+    }, [apiKey]);
+
+    if (loading) {
+        return (
+            <div className="text-center my-5">
+                <Spinner animation="border" variant="warning" />
+                <p className="mt-2 text-muted">Memuat film...</p>
+            </div>
+        );
+    }
 
     return (
-        <Container fluid className="movie-grid-container py-4">
-            {loading ? (
-                <div className="text-center mt-5">
-                    <Spinner animation="border" variant="warning" />
-                    <p className="text-muted mt-3">Memuat data film...</p>
-                </div>
-            ) : (
-                <Row>
-                    {movies.map((movie) => (
-                        <Col key={movie.id} xs={6} sm={4} md={3} lg={2} className="mb-4">
-                            <Card className="h-100 shadow-sm border-0">
-                                <Card.Img
-                                    variant="top"
-                                    src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-                                    alt={movie.title}
-                                    style={{ height: "280px", objectFit: "cover" }}
-                                />
-                                <Card.Body>
-                                    <Card.Title className="fs-6 text-truncate">{movie.title}</Card.Title>
-                                    <div className="d-flex align-items-center">
-                                        <StarFill color="#ffc107" className="me-1" />
-                                        <span>{(movie.vote_average / 2).toFixed(1)}</span>
-                                    </div>
-                                </Card.Body>
-                            </Card>
-                        </Col>
-                    ))}
-                </Row>
-            )}
+        <div className="movie-slider-container">
+            <h2 className="fw-bold mb-4" style={{ color: "#D9A299" }}>
+                🎬 Film Populer Minggu Ini
+            </h2>
 
-            <div className="text-center mt-3">
-                <Button
-                    onClick={() => setPage((prev) => prev + 1)}
-                    style={{ backgroundColor: "#D9A299", border: "none" }}
-                >
-                    Halaman Berikutnya
-                </Button>
-            </div>
-        </Container>
+            <Swiper
+                modules={[EffectCoverflow, Navigation, Pagination]}
+                effect="coverflow"
+                grabCursor={true}
+                centeredSlides={true}
+                slidesPerView="auto"
+                speed={1000}
+                pagination={{ clickable: true }}
+                navigation
+                coverflowEffect={{
+                    rotate: 50,
+                    stretch: 0,
+                    depth: 120,
+                    modifier: 1,
+                    slideShadows: true,
+                }}
+                className="movie-grid-swiper"
+            >
+                {movies.map((movie) => (
+                    <SwiperSlide key={movie.id} className="movie-slide">
+                        <Card className="movie-card h-100 shadow border-0">
+                            <Card.Img
+                                variant="top"
+                                src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                                alt={movie.title}
+                                className="movie-poster"
+                            />
+                            <Card.Body className="movie-info">
+                                <Card.Title className="movie-title">{movie.title}</Card.Title>
+                                <div className="d-flex align-items-center justify-content-center movie-rating">
+                                    <StarFill color="#ffc107" className="me-1" />
+                                    <span>{(movie.vote_average / 2).toFixed(1)}</span>
+                                </div>
+                            </Card.Body>
+                        </Card>
+                    </SwiperSlide>
+                ))}
+            </Swiper>
+        </div>
     );
 }
