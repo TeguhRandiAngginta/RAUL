@@ -1,33 +1,40 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Container, Row, Col, Card, Button, Spinner } from "react-bootstrap";
-import { Link } from "react-router-dom";
-import { StarFill } from "react-bootstrap-icons";
+import { Link, useSearchParams } from "react-router-dom";
+import { StarFill, ArrowLeftCircle, ArrowRightCircle } from "react-bootstrap-icons";
 
 export default function MovieList() {
+    const [searchParams, setSearchParams] = useSearchParams();
     const [movies, setMovies] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+
+    // Ambil halaman dari URL, default ke 1 jika tidak ada
+    const page = parseInt(searchParams.get("page")) || 1;
 
     useEffect(() => {
         const fetchMovies = async () => {
+            setLoading(true);
             try {
                 const res = await axios.get(
                     `https://api.themoviedb.org/3/movie/popular?api_key=15050283b30a09e0018841fd5769b73b&language=id-ID&page=${page}`
                 );
                 setMovies(res.data.results);
+                setTotalPages(res.data.total_pages);
             } catch (error) {
                 console.error("Gagal ambil data TMDB:", error);
             } finally {
                 setLoading(false);
+                window.scrollTo({ top: 0, behavior: "smooth" });
             }
         };
 
         fetchMovies();
     }, [page]);
 
-    const loadMore = () => {
-        setPage((prev) => prev + 1);
+    const handlePageChange = (newPage) => {
+        setSearchParams({ page: newPage.toString() });
     };
 
     if (loading) {
@@ -89,18 +96,43 @@ export default function MovieList() {
                     ))}
                 </Row>
 
-                <div className="text-center mt-4">
+                {/* Navigasi Panah */}
+                <div className="d-flex justify-content-center align-items-center mt-4 gap-3">
+                    {/* Panah kiri */}
                     <Button
-                        onClick={loadMore}
-                        variant="outline-dark"
+                        variant="light"
+                        onClick={() => handlePageChange(page - 1)}
+                        disabled={page === 1}
                         style={{
-                            backgroundColor: "#D9A299",
+                            borderRadius: "50%",
+                            width: "50px",
+                            height: "50px",
+                            backgroundColor: page === 1 ? "#ddd" : "#D9A299",
                             border: "none",
-                            color: "#fff",
-                            fontWeight: "bold",
                         }}
                     >
-                        Muat Lebih Banyak
+                        <ArrowLeftCircle size={28} color="#fff" />
+                    </Button>
+
+                    <span className="fw-bold" style={{ color: "#D9A299" }}>
+                        Halaman {page} / {totalPages > 500 ? 500 : totalPages}
+                    </span>
+
+                    {/* Panah kanan */}
+                    <Button
+                        variant="light"
+                        onClick={() => handlePageChange(page + 1)}
+                        disabled={page === totalPages || page >= 500}
+                        style={{
+                            borderRadius: "50%",
+                            width: "50px",
+                            height: "50px",
+                            backgroundColor:
+                                page === totalPages || page >= 500 ? "#ddd" : "#D9A299",
+                            border: "none",
+                        }}
+                    >
+                        <ArrowRightCircle size={28} color="#fff" />
                     </Button>
                 </div>
             </Container>
