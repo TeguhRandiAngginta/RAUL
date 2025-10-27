@@ -11,7 +11,7 @@ import Image from 'react-bootstrap/Image';
 import logo from '../assets/logo/logoWeb.png';
 import img from '../assets/logo/log1.png';
 import { useForm } from 'react-hook-form';
-import './style.css'; // Import external CSS
+import '../styles/style.css'; // Import external CSS
 
 export default function ForgetPassword() {
     const {

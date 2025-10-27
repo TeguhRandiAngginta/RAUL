@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Navbar, Nav, Container, Dropdown } from "react-bootstrap";
 import { FaSearch } from "react-icons/fa";
-import { useAuth } from '../App';
+import { useAuth } from '../../App';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import "../pages/style.css";
+import '../../styles/navbar.css';
 
 const Header = () => {
     const [input, setInput] = useState("");

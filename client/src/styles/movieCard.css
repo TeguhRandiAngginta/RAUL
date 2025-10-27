@@ -1,0 +1,31 @@
+    .movie-card {
+    background-color: #f0e4d3;
+    border: none;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    height: 100%;
+    }
+
+    .movie-card img {
+    height: 350px;
+    object-fit: cover;
+    }
+
+    .movie-card-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    }
+
+    .movie-title {
+    font-weight: bold;
+    font-size: 1rem;
+    }
+
+    .movie-detail-btn {
+    background-color: #d9a299;
+    border: none;
+    font-weight: bold;
+    }
+    .movie-detail-btn:hover {
+    background-color: #c48880;
+    }

@@ -14,7 +14,7 @@ import { useForm } from 'react-hook-form';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../App'; // Sesuaikan path jika perlu
 import axios from 'axios';
-import './style.css'; // Import external CSS
+import '../styles/style.css'; // Import external CSS
 
 export default function Signin() {
     const {

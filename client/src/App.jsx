@@ -9,8 +9,8 @@ import SignUp from './pages/Signup';
 import ForgetPassword from './pages/ForgetPassword';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import AdminDashboard from './pages/AdminDashboard';
-import Header from './component/Navbar';
-import Footer from './component/Footer';
+import Header from './component/layout/Navbar';
+import Footer from './component/layout/Footer';
 import MovieDetail from './pages/MovieDetail';
 import MovieList from './pages/MovieList'; // pastikan path-nya bener
 
