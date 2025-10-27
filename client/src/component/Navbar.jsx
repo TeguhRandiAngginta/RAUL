@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Navbar, Nav, Container } from "react-bootstrap";
+import { Navbar, Nav, Container, Dropdown } from "react-bootstrap";
 import { FaSearch } from "react-icons/fa";
 import { useAuth } from '../App';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -20,7 +20,7 @@ const Header = () => {
         <Navbar expand="lg" className="px-3 navbar" style={{ backgroundColor: "#f5e6d3" }}>
             <Container fluid>
                 {/* Logo */}
-                <Navbar.Brand href="/" className="fw-bold fs-3 logo-brand">
+                <Navbar.Brand as={Link} to="/" className="fw-bold fs-3 logo-brand">
                     RAUL
                 </Navbar.Brand>
                 
@@ -48,17 +48,24 @@ const Header = () => {
                         <Nav.Link href="#tahun">Tahun</Nav.Link>
                     </Nav>
 
-                    {/* Login or Username */}
+                    {/* Login or Username with Dropdown */}
                     <div className="d-flex align-items-center ms-auto">
                         {user ? (
-                            <Nav.Link 
-                                as={Link} 
-                                to="/" 
-                                className="btn btn-info login-btn"
-                                onClick={handleLogout}
-                            >
-                                {user.username}
-                            </Nav.Link>
+                            <Dropdown align="end">
+                                <Dropdown.Toggle 
+                                    variant="link" 
+                                    id="user-dropdown" 
+                                    className="btn btn-info login-btn p-2"
+                                >
+                                    {user.username}
+                                </Dropdown.Toggle>
+                                <Dropdown.Menu className="profile-dropdown-menu">
+                                    <Dropdown.Item as={Link} to="/account">Akun</Dropdown.Item>
+                                    <Dropdown.Item as={Link} to="/watchlist">Watchlist</Dropdown.Item>
+                                    <Dropdown.Divider />
+                                    <Dropdown.Item onClick={handleLogout}>Logout</Dropdown.Item>
+                                </Dropdown.Menu>
+                            </Dropdown>
                         ) : (
                             <Nav.Link 
                                 as={Link} 
