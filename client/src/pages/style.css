@@ -292,3 +292,23 @@ button.dm-sans:hover {
     border: none !important;
     transform: translateY(0);
 }
+/* Styling untuk dropdown */
+.profile-dropdown-menu {
+    min-width: 200px;
+    border: 1px solid #dcc5b2;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background-color: #f5e6d3;
+}
+
+.profile-dropdown-menu .dropdown-item {
+    font-family: "DM Sans", sans-serif;
+    color: #3a2a1a;
+    padding: 8px 16px;
+}
+
+.profile-dropdown-menu .dropdown-item:hover {
+    background-color: #d9a299;
+    color: #2a1f11;
+}
+
+
