@@ -1,0 +1,148 @@
+    .home-wrapper {
+    background-color: #faf7f3;
+    min-height: 100vh;
+    padding: 50px 0;
+    }
+
+    .header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 10px;
+    }
+
+    .section-title {
+    font-weight: 700;
+    color: #d9a299;
+    }
+
+    .grid-buttons button {
+    margin-left: 8px;
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 6px 12px;
+    }
+
+    button.btn.active-grid {
+    background-color: #d9a299;
+    border: none;
+    color: white;
+    }
+
+    button.btn.outline-grid {
+    background-color: #f0e4d3;
+    border: none;
+    color: #4a3f3f;
+    }
+
+    button.btn.outline-grid:hover {
+    background-color: #d9a299;
+    color: white;
+    }
+
+    .loading-container {
+    text-align: center;
+    margin-top: 80px;
+    color: #a37f74;
+    }
+
+    .movie-grid {
+    row-gap: 30px;
+    }
+
+    .movie-card {
+    background-color: #f0e4d3;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    }
+
+    .movie-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .movie-poster {
+    height: 330px;
+    object-fit: cover;
+    border-radius: 12px 12px 0 0;
+    }
+
+    .movie-title {
+    font-weight: 600;
+    color: #1a1a1a;
+    font-size: 1rem;
+    text-align: center;
+    margin-bottom: 8px;
+    }
+
+    .movie-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: #ffc107;
+    margin-bottom: 12px;
+    }
+
+    .rating {
+    color: #333;
+    font-weight: 600;
+    }
+
+    .detail-btn {
+    background-color: #d9a299;
+    border: none;
+    font-weight: 600;
+    width: 100%;
+    transition: background-color 0.3s;
+    }
+
+    .detail-btn:hover {
+    background-color: #b87f75;
+    }
+
+    .pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin-top: 40px;
+    }
+
+    .page-btn {
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    background-color: #d9a299;
+    border: none;
+    }
+
+    .page-btn:disabled {
+    background-color: #ddd;
+    }
+
+    .page-info {
+    font-weight: 600;
+    color: #a37f74;
+    }
+
+    /* Responsif */
+    @media (max-width: 992px) {
+    .movie-poster {
+        height: 300px;
+    }
+    }
+
+    @media (max-width: 768px) {
+    .movie-poster {
+        height: 250px;
+    }
+    }
+
+    @media (max-width: 576px) {
+    .movie-poster {
+        height: 200px;
+    }
+    }

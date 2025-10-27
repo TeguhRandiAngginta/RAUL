@@ -101,4 +101,15 @@
     .footer-links {
         padding: 1.5rem 2rem;
     }
+
+    /* Tambahan baru ⬇️ */
+    .footer-brand {
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* biar logo & teks ke tengah */
+    }
+
+    .social-icons {
+        justify-content: center; /* biar ikon sosmed ke tengah juga */
+    }
     }
