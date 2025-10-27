@@ -12,6 +12,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import Header from './component/Navbar';
 import Footer from './component/Footer';
 import MovieDetail from './pages/MovieDetail';
+import MovieList from './pages/MovieList'; // pastikan path-nya bener
 
 
 // Auth Context
@@ -79,6 +80,7 @@ function AppContent() {
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/movie/:id" element={<MovieDetail />} />
+          <Route path="/movies" element={<MovieList />} />
         </Routes>
       </main>
       {!hideLayoutRoutes.includes(location.pathname) && <Footer />}
