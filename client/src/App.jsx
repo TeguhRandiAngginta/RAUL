@@ -28,23 +28,18 @@ function AppContent() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const token = getCookie('raul_token'); // Fungsi untuk membaca cookie
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      fetchProfile(token);
-    } else {
-      setIsLoading(false);
-    }
+    fetchProfile();
   }, []);
 
-  const fetchProfile = async (token) => {
+  const fetchProfile = async () => {
     try {
       const res = await axios.get('http://localhost:5000/api/v1/users/profile', { withCredentials: true });
       setUser({ username: res.data.username });
     } catch (error) {
-      removeCookie('raul_token'); // Hapus cookie jika token invalid
-      delete axios.defaults.headers.common['Authorization'];
+      setUser(null); 
+      // Kita tidak perlu hapus cookie, server akan menolak token yang tidak valid
     } finally {
+      // Selesai loading, apapun hasilnya
       setIsLoading(false);
     }
   };
@@ -57,10 +52,18 @@ function AppContent() {
     return res.data;
   };
 
-  const logout = () => {
-    removeCookie('raul_token');
-    delete axios.defaults.headers.common['Authorization'];
-    setUser(null);
+  const logout = async () => {
+    try {
+      // Panggil API logout di server untuk menghapus cookie httpOnly
+      await axios.post('http://localhost:5000/api/v1/auth/logout', {}, { 
+        withCredentials: true 
+      });
+    } catch (error) {
+      console.error("Logout failed", error);
+    } finally {
+      // Hapus state user di client
+      setUser(null);
+    }
   };
 
   const value = { user, login, logout, isLoading };
@@ -88,13 +91,6 @@ function AppContent() {
   );
 }
 
-// Fungsi utilitas untuk membaca cookie
-function getCookie(name) {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(';').shift();
-  return null;
-}
 
 // Fungsi utilitas untuk menghapus cookie
 function removeCookie(name) {

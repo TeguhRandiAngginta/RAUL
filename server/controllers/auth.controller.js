@@ -52,9 +52,22 @@ export const login = async (req, res, next) => {
         const token = jwt.sign({ id: user._id }, process.env.AUTH_SECRET);
         const { username } = user;
         res
-            .cookie('raul_token', token, { httpOnly: true })
+            .cookie('raul_token', token, { httpOnly: true, path: '/' })
             .status(200)
             .json({ username });
+    } catch (error) {
+        next({ status: 500, error });
+    }
+};
+
+export const logout = async (req, res, next) => {
+    try {
+        res
+        .clearCookie('raul_token', {
+            path: '/',
+        })
+        .status(200)
+        .json({ message: 'Logout berhasil' });
     } catch (error) {
         next({ status: 500, error });
     }
