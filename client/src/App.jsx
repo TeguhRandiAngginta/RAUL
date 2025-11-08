@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Toaster } from 'react-hot-toast';
 import { createContext, useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import api from './api/api';
 import Home from './pages/Home';
 import SignIn from './pages/Signin';
 import SignUp from './pages/Signup';
@@ -12,7 +12,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import Header from './component/layout/Navbar';
 import Footer from './component/layout/Footer';
 import MovieDetail from './pages/MovieDetail';
-import MovieList from './pages/MovieList'; // pastikan path-nya bener
+import MovieList from './pages/MovieList';
 
 
 // Auth Context
@@ -33,19 +33,17 @@ function AppContent() {
 
   const fetchProfile = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/v1/users/profile', { withCredentials: true });
+      const res = await api.get('/users/profile');
       setUser({ username: res.data.username });
     } catch (error) {
       setUser(null); 
-      // Kita tidak perlu hapus cookie, server akan menolak token yang tidak valid
     } finally {
-      // Selesai loading, apapun hasilnya
       setIsLoading(false);
     }
   };
 
   const login = async (email, password) => {
-    const res = await axios.post('http://localhost:5000/api/v1/auth/login', { email, password }, { withCredentials: true });
+    const res = await api.post('/auth/login', { email, password });
     if (res.status === 200) {
       setUser({ username: res.data.username });
     }
@@ -54,14 +52,10 @@ function AppContent() {
 
   const logout = async () => {
     try {
-      // Panggil API logout di server untuk menghapus cookie httpOnly
-      await axios.post('http://localhost:5000/api/v1/auth/logout', {}, { 
-        withCredentials: true 
-      });
+      await api.post('/auth/logout');
     } catch (error) {
       console.error("Logout failed", error);
     } finally {
-      // Hapus state user di client
       setUser(null);
     }
   };
@@ -91,11 +85,6 @@ function AppContent() {
   );
 }
 
-
-// Fungsi utilitas untuk menghapus cookie
-function removeCookie(name) {
-  document.cookie = `${name}=; Max-Age=0; path=/`;
-}
 
 export default function App() {
   return (
