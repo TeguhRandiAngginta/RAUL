@@ -1,39 +1,84 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Container, Row, Col, Button, Form, Spinner } from "react-bootstrap";
-import { StarFill, EyeFill, HeartFill, PlusCircle, ArrowLeft } from "react-bootstrap-icons";
+import {
+    Container,
+    Row,
+    Col,
+    Button,
+    Form,
+    Spinner,
+    Modal,
+} from "react-bootstrap";
+import {
+    StarFill,
+    EyeFill,
+    HeartFill,
+    PlusCircle,
+    ArrowLeft,
+} from "react-bootstrap-icons";
+import { FaStar } from "react-icons/fa";
+
+// Komponen StarRating kustom untuk di dalam Modal
+const StarRating = ({ rating, setRating, hover, setHover }) => {
+    return (
+        <div className="d-flex justify-content-center mb-3">
+            {[...Array(5)].map((star, index) => {
+                const ratingValue = index + 1;
+                return (
+                    <label key={index} style={{ cursor: "pointer" }}>
+                        <input
+                            type="radio"
+                            name="rating"
+                            value={ratingValue}
+                            onClick={() => setRating(ratingValue)}
+                            style={{ display: "none" }}
+                        />
+                        <FaStar
+                            size={40}
+                            color={ratingValue <= (hover || rating) ? "#ffc107" : "#e4e5e9"}
+                            onMouseEnter={() => setHover(ratingValue)}
+                            onMouseLeave={() => setHover(0)}
+                            className="mx-1"
+                        />
+                    </label>
+                );
+            })}
+        </div>
+    );
+};
 
 export default function MovieDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [movie, setMovie] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [review, setReview] = useState("");
+
+    // State untuk Modal dan Review
     const [reviews, setReviews] = useState([]);
+    const [showReviewModal, setShowReviewModal] = useState(false);
+    const [userRating, setUserRating] = useState(0);
+    const [userReview, setUserReview] = useState("");
+    const [hoverRating, setHoverRating] = useState(0);
 
     useEffect(() => {
-        // Scroll ke atas saat komponen dimuat
         window.scrollTo({ top: 0, behavior: "smooth" });
 
         const fetchMovieDetail = async () => {
             setLoading(true);
             try {
-                // Coba ambil versi Indonesia dulu
                 const resId = await axios.get(
                     `https://api.themoviedb.org/3/movie/${id}?api_key=15050283b30a09e0018841fd5769b73b&language=id-ID&append_to_response=credits`
                 );
 
-                // Jika overview kosong, ambil versi Inggris sebagai fallback
                 if (!resId.data.overview || resId.data.overview.trim() === "") {
                     const resEn = await axios.get(
                         `https://api.themoviedb.org/3/movie/${id}?api_key=15050283b30a09e0018841fd5769b73b&language=en-US&append_to_response=credits`
                     );
-                    // Gabungkan data: pakai bahasa Indonesia untuk yang ada, Inggris untuk overview
                     setMovie({
                         ...resId.data,
                         overview: resEn.data.overview,
-                        tagline: resId.data.tagline || resEn.data.tagline
+                        tagline: resId.data.tagline || resEn.data.tagline,
                     });
                 } else {
                     setMovie(resId.data);
@@ -48,16 +93,37 @@ export default function MovieDetail() {
         fetchMovieDetail();
     }, [id]);
 
-    const handleSubmit = (e) => {
+    const handleShowModal = () => setShowReviewModal(true);
+    const handleCloseModal = () => {
+        setShowReviewModal(false);
+        setUserRating(0);
+        setUserReview("");
+        setHoverRating(0);
+    };
+
+    const handleReviewSubmit = (e) => {
         e.preventDefault();
-        if (review.trim() === "") return;
-        setReviews([...reviews, review]);
-        setReview("");
+        if (userRating === 0 || userReview.trim() === "") {
+            alert("Harap isi rating bintang dan ulasan Anda.");
+            return;
+        }
+
+        const newReview = {
+            rating: userRating,
+            text: userReview,
+            user: "Kamu", // Nanti bisa diganti dengan user.username
+        };
+
+        setReviews([newReview, ...reviews]);
+        handleCloseModal();
     };
 
     if (loading) {
         return (
-            <div className="text-center mt-5" style={{ minHeight: "100vh", backgroundColor: "#1a1a1a" }}>
+            <div
+                className="text-center mt-5"
+                style={{ minHeight: "100vh", backgroundColor: "#1a1a1a" }}
+            >
                 <Spinner animation="border" variant="warning" />
                 <p className="mt-3 text-light">Memuat detail film...</p>
             </div>
@@ -66,7 +132,10 @@ export default function MovieDetail() {
 
     if (!movie) {
         return (
-            <div className="text-center mt-5" style={{ minHeight: "100vh", backgroundColor: "#1a1a1a" }}>
+            <div
+                className="text-center mt-5"
+                style={{ minHeight: "100vh", backgroundColor: "#1a1a1a" }}
+            >
                 <h2 className="text-light">Film tidak ditemukan 😢</h2>
                 <Button variant="warning" className="mt-3" onClick={() => navigate(-1)}>
                     <ArrowLeft className="me-2" />
@@ -76,8 +145,9 @@ export default function MovieDetail() {
         );
     }
 
-    // Ambil director dari credits
-    const director = movie.credits?.crew?.find(person => person.job === "Director")?.name || "Unknown";
+    const director =
+        movie.credits?.crew?.find((person) => person.job === "Director")?.name ||
+        "Unknown";
 
     return (
         <div
@@ -105,16 +175,6 @@ export default function MovieDetail() {
 
             {/* Konten utama */}
             <Container className="position-relative py-5" style={{ zIndex: 2 }}>
-                {/* Tombol Kembali */}
-                {/* <Button
-                    variant="outline-light"
-                    className="mb-4"
-                    onClick={() => navigate(-1)}
-                >
-                    <ArrowLeft className="me-2" />
-                    Kembali
-                </Button> */}
-
                 <Row className="align-items-center">
                     {/* Poster */}
                     <Col md={4} className="text-center mb-4">
@@ -191,7 +251,7 @@ export default function MovieDetail() {
                                     <EyeFill /> Website
                                 </Button>
                             )}
-                            <Button variant="outline-light">
+                            <Button variant="outline-light" onClick={handleShowModal}>
                                 <StarFill /> Rate
                             </Button>
                             <Button variant="outline-light">
@@ -204,7 +264,8 @@ export default function MovieDetail() {
                             {[...Array(5)].map((_, i) => {
                                 const ratingOutOf5 = movie.vote_average / 2;
                                 const isFilled = i < Math.floor(ratingOutOf5);
-                                const isHalf = i === Math.floor(ratingOutOf5) && ratingOutOf5 % 1 >= 0.5;
+                                const isHalf =
+                                    i === Math.floor(ratingOutOf5) && ratingOutOf5 % 1 >= 0.5;
 
                                 return (
                                     <StarFill
@@ -218,43 +279,22 @@ export default function MovieDetail() {
                             <span className="ms-2 fw-bold">
                                 {(movie.vote_average / 2).toFixed(1)}/5
                             </span>
-                            <span className="ms-2 text-secondary" style={{ fontSize: "0.9rem" }}>
+                            <span
+                                className="ms-2 text-secondary"
+                                style={{ fontSize: "0.9rem" }}
+                            >
                                 (Rating TMDB: {movie.vote_average?.toFixed(1)}/10)
                             </span>
                         </div>
                     </Col>
                 </Row>
 
-                {/* Formulir masukkan review */}
+                {/* --- Bagian Review --- */}
                 <Row className="mt-5">
-                    <Col md={4}>
-                        <h5 className="fw-bold text-light mb-3">Masukkan Review</h5>
-                        <div className="bg-dark p-3 rounded">
-                            <Form onSubmit={handleSubmit}>
-                                <Form.Control
-                                    as="textarea"
-                                    rows={3}
-                                    placeholder="Tulis pendapatmu tentang film ini..."
-                                    value={review}
-                                    onChange={(e) => setReview(e.target.value)}
-                                    className="mb-3"
-                                />
-                                <Button
-                                    type="submit"
-                                    variant="warning"
-                                    className="w-100 text-dark fw-bold"
-                                >
-                                    Kirim Review
-                                </Button>
-                            </Form>
-                        </div>
-                    </Col>
-
-                    {/* Reviews */}
-                    <Col md={8}>
-                        <h5 className="fw-bold text-light mb-3">Reviews</h5>
+                    <Col md={12}>
+                        <h5 className="fw-bold text-light mb-3">Ulasan Pengguna</h5>
                         {reviews.length === 0 ? (
-                            <p className="text-white">Belum ada review. Jadilah yang pertama!</p>
+                            <p className="text-white">Belum ada ulasan. Jadilah yang pertama!</p>
                         ) : (
                             reviews.map((rev, i) => (
                                 <div
@@ -265,14 +305,94 @@ export default function MovieDetail() {
                                         border: "1px solid #2a2a2a",
                                     }}
                                 >
-                                    <p className="fw-bold text-warning mb-1">Kamu ★★★★☆</p>
-                                    <p className="text-light mb-0">{rev}</p>
+                                    <p className="fw-bold text-warning mb-1">
+                                        {rev.user}{" "}
+                                        {[...Array(5)].map((_, index) => (
+                                            <StarFill
+                                                key={index}
+                                                size={16}
+                                                color={index < rev.rating ? "#ffc107" : "#555"}
+                                                className={index > 0 ? "ms-1" : ""}
+                                            />
+                                        ))}
+                                    </p>
+                                    <p className="text-light mb-0">{rev.text}</p>
                                 </div>
                             ))
                         )}
                     </Col>
                 </Row>
             </Container>
+
+            {/* --- Modal untuk Review --- */}
+            <Modal
+                show={showReviewModal}
+                onHide={handleCloseModal}
+                centered
+                data-bs-theme="dark"
+            >
+                <Modal.Header
+                    closeButton
+                    className="bg-dark text-light border-secondary text-center"
+                >
+                    <Modal.Title as="h5" className="w-100 fw-bold">
+                        Beri Ulasan Anda
+                    </Modal.Title>
+                </Modal.Header>
+
+                <Form onSubmit={handleReviewSubmit}>
+                    <Modal.Body
+                        className="bg-dark text-light d-flex flex-column align-items-center"
+                    >
+                        <p className="text-secondary mb-2">Pilih Rating Anda</p>
+                        <StarRating
+                            rating={userRating}
+                            setRating={setUserRating}
+                            hover={hoverRating}
+                            setHover={setHoverRating}
+                        />
+                        <Form.Group className="mt-3 w-100 text-center d-flex flex-column align-items-center">
+                            <Form.Label className="fw-semibold text-light mb-2">
+                                Ulasan Anda
+                            </Form.Label>
+                            <Form.Control
+                                as="textarea"
+                                rows={4}
+                                placeholder="Bagikan pendapat Anda tentang film ini..."
+                                value={userReview}
+                                onChange={(e) => setUserReview(e.target.value)}
+                                required
+                                className="bg-dark text-light border-secondary rounded p-3"
+                                style={{
+                                    width: "90%",
+                                    maxWidth: "500px",
+                                    resize: "none",
+                                    textAlign: "center",
+                                }}
+                            />
+                        </Form.Group>
+                    </Modal.Body>
+
+                    <Modal.Footer className="bg-dark text-light border-secondary p-3">
+                        <div className="d-flex justify-content-between w-100">
+                            <Button
+                                variant="outline-secondary"
+                                onClick={handleCloseModal}
+                                className="px-4 py-2 me-3"
+                            >
+                                Batal
+                            </Button>
+                            <Button
+                                variant="warning"
+                                type="submit"
+                                className="text-dark fw-bold px-4 py-2"
+                            >
+                                Kirim Ulasan
+                            </Button>
+                        </div>
+                    </Modal.Footer>
+                </Form>
+            </Modal>
         </div>
     );
 }
