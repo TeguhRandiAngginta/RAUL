@@ -6,7 +6,7 @@ const API_KEY = process.env.TMDB_API_KEY;
 // Fungsi untuk mengambil film populer
 export const getPopularMovies = async (req, res, next) => {
     try {
-        const page = req.query.page || 1; // Ambil 'page' dari query, default 1
+        const page = req.query.page || 1; 
         
         const response = await axios.get(`${BASE_URL}/movie/popular`, {
             params: {
@@ -18,7 +18,6 @@ export const getPopularMovies = async (req, res, next) => {
         
         res.status(200).json(response.data);
     } catch (error) {
-        // Jika error, teruskan ke error handler
         next({ status: error.response?.status || 500, message: 'Gagal mengambil data dari TMDB' });
     }
 };
@@ -32,7 +31,7 @@ export const getMovieDetails = async (req, res, next) => {
             params: {
                 api_key: API_KEY,
                 language: 'id-ID',
-                append_to_response: 'credits,videos' // (Opsional) ambil data cast & trailer
+                append_to_response: 'credits,videos'
             },
         });
         
