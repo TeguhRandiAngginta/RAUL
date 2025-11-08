@@ -10,6 +10,12 @@ export const authenticateToken = (req, res, next) => {
         next();
     });
 };
+export const isAdmin = (req, res, next) => {
+    if (req.user.role !== 'admin') {
+        return next({ status: 403, message: 'Forbidden: ANDA BUKAN ADMIN' });
+    }
+    next();
+};
 
 export const errorHandler = (err, req, res, next) => {
     const defaultMessage = "We're having technical issues. Please try again later";

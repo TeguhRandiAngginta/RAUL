@@ -30,7 +30,7 @@ export const signup = async (req, res, next) => {
         };
         
         const { insertedId } = await collection.insertOne(user);
-        const token = jwt.sign({ id: insertedId }, process.env.AUTH_SECRET);
+        const token = jwt.sign({ id: insertedId, role: user.role }, process.env.AUTH_SECRET);
         user._id = insertedId;
         const { password: pass, updatedAt, createdAt, ...rest } = user;
         res
@@ -49,7 +49,7 @@ export const login = async (req, res, next) => {
         if (!user || !(await bcrypt.compare(password, user.password))) {
             return next({ status: 401, message: 'Email atau password salah' });
         }
-        const token = jwt.sign({ id: user._id }, process.env.AUTH_SECRET);
+        const token = jwt.sign({ id: user._id, role: user.role }, process.env.AUTH_SECRET);
         const { username } = user;
         res
             .cookie('raul_token', token, { httpOnly: true, path: '/' })
