@@ -4,6 +4,7 @@ import cors from "cors";
 import "dotenv/config";
 import userRouter from "./routes/user.route.js";
 import authRouter from "./routes/auth.route.js";
+import movieRouter from "./routes/movie.route.js";
 import { errorHandler } from "./configs/middleware.js";
 
 const PORT = process.env.PORT || 5000;
@@ -22,6 +23,7 @@ app.use(cookieParser());
 // api
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/movies", movieRouter);
 
 // default route
 app.get("/", (req, res) => {
