@@ -5,18 +5,25 @@ import{
     getUser,
     updateUser,
     deleteUser,
-    getUserProfile
+    getUserProfile,
+    toggleWatchlist,
+    getWatchlist
 } from  '../controllers/user.controller.js';
-import { authenticateToken } from '../configs/middleware.js';
+import { authenticateToken, isAdmin } from '../configs/middleware.js';
 
 const router = express.Router();
 
-// Endpoint untuk mendapatkan profil user berdasarkan token
+// rute user
 router.get('/profile', authenticateToken, getUserProfile);
+router.post('/watchlist/toggle', authenticateToken, toggleWatchlist);
+router.get('/watchlist/me', authenticateToken, getWatchlist);
 
-router.get('/', getUsers);
-router.get('/:id', getUser);
-router.patch('/update/:id', authenticateToken, updateUser);
-router.delete('/delete/:id', authenticateToken, deleteUser);
+// rute admin
+router.get('/', authenticateToken, isAdmin ,getUsers);
+router.get('/:id',authenticateToken, isAdmin, getUser);
+
+//rute campuran admin dan user itu sendiri (logika di controller)
+router.patch('update/:id', authenticateToken, updateUser);
+router.delete('delete/:id', authenticateToken, isAdmin, deleteUser);
 
 export default router;
