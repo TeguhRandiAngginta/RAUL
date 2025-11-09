@@ -12,9 +12,9 @@ import logo from '../assets/logo/logoWeb.png';
 import img from '../assets/logo/log1.png';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../App'; // Sesuaikan path jika perlu
+import { useAuth } from '../App';
 import axios from 'axios';
-import '../styles/style.css'; // Import external CSS
+import '../styles/style.css';
 
 export default function Signin() {
     const {
@@ -33,7 +33,7 @@ export default function Signin() {
                 email: data.email,
                 password: data.password,
             }, {
-                withCredentials: true, // Izinkan cookie dari backend
+                withCredentials: true,
             });
 
             if (res.status === 200) {
@@ -41,9 +41,13 @@ export default function Signin() {
                 await login(data.email, data.password);
                 toast.success('Sign in Successful');
 
-                // Arahkan ke halaman sebelumnya atau ke halaman utama jika tidak ada
+                // Cek apakah ada halaman sebelumnya yang tersimpan
                 const from = location.state?.from?.pathname || '/';
-                navigate(from, { replace: true });
+                
+                // Redirect ke halaman sebelumnya atau ke halaman utama
+                setTimeout(() => {
+                    navigate(from, { replace: true });
+                }, 500);
             } else {
                 toast.error('Login gagal. Periksa email atau kata sandi.');
             }
@@ -116,9 +120,13 @@ export default function Signin() {
                             </Button>
                             <p className="mt-3 mb-5 dm-sans">
                                 Belum Punya Akun?{' '}
-                                <a href="/signup" className="link-dark">
+                                <span 
+                                    onClick={() => navigate('/signup', { state: { from: location.state?.from } })}
+                                    className="link-dark"
+                                    style={{ cursor: 'pointer' }}
+                                >
                                     <b>Daftar</b>
-                                </a>
+                                </span>
                             </p>
                         </Form>
                     </Col>
