@@ -100,10 +100,13 @@ export default function MovieDetail() {
             toast.error("Silakan login terlebih dahulu", {
                 duration: 2000,
             });
-            navigate("/signin", { state: { from: { pathname: location.pathname } } });
+
+            // Tambahkan delay 1.5 detik sebelum redirect
+            setTimeout(() => {
+                navigate("/signin", { state: { from: { pathname: location.pathname } } });
+            }, 1300);
         }
     };
-
     const handleCloseModal = () => {
         setShowReviewModal(false);
         setUserRating(0);
@@ -114,7 +117,7 @@ export default function MovieDetail() {
     // Kirim review ke backend
     const handleReviewSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (userRating === 0) {
             toast.error("Harap isi rating bintang!", {
                 duration: 3000,
