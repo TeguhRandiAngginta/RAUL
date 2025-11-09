@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../App.jsx";
+import api from "../api/api";
+import toast from 'react-hot-toast'; // Import toast
 import {
     Container,
     Row,
@@ -51,6 +53,9 @@ const StarRating = ({ rating, setRating, hover, setHover }) => {
 export default function MovieDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
+    const { user } = useAuth();
+
     const [movie, setMovie] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -64,36 +69,41 @@ export default function MovieDetail() {
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: "smooth" });
 
-        const fetchMovieDetail = async () => {
+        const fetchMovieData = async () => {
             setLoading(true);
             try {
-                const resId = await axios.get(
-                    `https://api.themoviedb.org/3/movie/${id}?api_key=15050283b30a09e0018841fd5769b73b&language=id-ID&append_to_response=credits`
-                );
+                // Ambil detail film DARI BACKEND
+                const movieRes = await api.get(`/movies/${id}`);
+                setMovie(movieRes.data);
 
-                if (!resId.data.overview || resId.data.overview.trim() === "") {
-                    const resEn = await axios.get(
-                        `https://api.themoviedb.org/3/movie/${id}?api_key=15050283b30a09e0018841fd5769b73b&language=en-US&append_to_response=credits`
-                    );
-                    setMovie({
-                        ...resId.data,
-                        overview: resEn.data.overview,
-                        tagline: resId.data.tagline || resEn.data.tagline,
-                    });
-                } else {
-                    setMovie(resId.data);
-                }
+                // Ambil review untuk film ini DARI BACKEND
+                const reviewsRes = await api.get(`/reviews/movie/${id}`);
+                setReviews(reviewsRes.data);
+
             } catch (error) {
-                console.error("Gagal ambil detail film:", error);
+                console.error("Gagal ambil data film atau review:", error);
+                toast.error("Gagal memuat data film");
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchMovieDetail();
+        fetchMovieData();
     }, [id]);
 
-    const handleShowModal = () => setShowReviewModal(true);
+    // Pengecekan login saat tombol "Rate" diklik
+    const handleShowModal = () => {
+        if (user) {
+            setShowReviewModal(true);
+        } else {
+            // Mengarahkan ke login dan menyimpan halaman saat ini
+            toast.error("Silakan login terlebih dahulu", {
+                duration: 2000,
+            });
+            navigate("/signin", { state: { from: { pathname: location.pathname } } });
+        }
+    };
+
     const handleCloseModal = () => {
         setShowReviewModal(false);
         setUserRating(0);
@@ -101,21 +111,68 @@ export default function MovieDetail() {
         setHoverRating(0);
     };
 
-    const handleReviewSubmit = (e) => {
+    // Kirim review ke backend
+    const handleReviewSubmit = async (e) => {
         e.preventDefault();
-        if (userRating === 0 || userReview.trim() === "") {
-            alert("Harap isi rating bintang dan ulasan Anda.");
+        
+        if (userRating === 0) {
+            toast.error("Harap isi rating bintang!", {
+                duration: 3000,
+                position: 'top-center',
+                style: {
+                    background: '#333',
+                    color: '#fff',
+                },
+            });
             return;
         }
 
-        const newReview = {
+        if (!userReview.trim()) {
+            toast.error("Harap isi ulasan Anda!", {
+                duration: 3000,
+                position: 'top-center',
+                style: {
+                    background: '#333',
+                    color: '#fff',
+                },
+            });
+            return;
+        }
+
+        const reviewData = {
+            tmdbMovieId: id,
             rating: userRating,
-            text: userReview,
-            user: "Kamu", // Nanti bisa diganti dengan user.username
+            comment: userReview,
         };
 
-        setReviews([newReview, ...reviews]);
-        handleCloseModal();
+        try {
+            // Kirim data ke API
+            const res = await api.post('/reviews', reviewData);
+
+            // Backend sudah return review dengan data user
+            setReviews([res.data, ...reviews]);
+            handleCloseModal();
+
+            toast.success('Review berhasil dikirim! 🎉', {
+                duration: 3000,
+                position: 'top-center',
+                style: {
+                    background: '#333',
+                    color: '#fff',
+                },
+            });
+
+        } catch (error) {
+            console.error("Gagal mengirim review:", error);
+            toast.error(error.response?.data?.message || "Gagal menyimpan review", {
+                duration: 4000,
+                position: 'top-center',
+                style: {
+                    background: '#333',
+                    color: '#fff',
+                },
+            });
+        }
     };
 
     if (loading) {
@@ -145,9 +202,10 @@ export default function MovieDetail() {
         );
     }
 
+    // Ambil director dari credits
     const director =
         movie.credits?.crew?.find((person) => person.job === "Director")?.name ||
-        "Unknown";
+        "N/A";
 
     return (
         <div
@@ -296,9 +354,9 @@ export default function MovieDetail() {
                         {reviews.length === 0 ? (
                             <p className="text-white">Belum ada ulasan. Jadilah yang pertama!</p>
                         ) : (
-                            reviews.map((rev, i) => (
+                            reviews.map((rev) => (
                                 <div
-                                    key={i}
+                                    key={rev._id}
                                     className="p-3 mb-3 rounded"
                                     style={{
                                         backgroundColor: "#1b1b1b",
@@ -306,7 +364,7 @@ export default function MovieDetail() {
                                     }}
                                 >
                                     <p className="fw-bold text-warning mb-1">
-                                        {rev.user}{" "}
+                                        {rev.user?.username || "User"}{" "}
                                         {[...Array(5)].map((_, index) => (
                                             <StarFill
                                                 key={index}
@@ -316,7 +374,7 @@ export default function MovieDetail() {
                                             />
                                         ))}
                                     </p>
-                                    <p className="text-light mb-0">{rev.text}</p>
+                                    <p className="text-light mb-0">{rev.comment || rev.text}</p>
                                 </div>
                             ))
                         )}
@@ -361,7 +419,6 @@ export default function MovieDetail() {
                                 placeholder="Bagikan pendapat Anda tentang film ini..."
                                 value={userReview}
                                 onChange={(e) => setUserReview(e.target.value)}
-                                required
                                 className="bg-dark text-light border-secondary rounded p-3"
                                 style={{
                                     width: "90%",
@@ -373,12 +430,12 @@ export default function MovieDetail() {
                         </Form.Group>
                     </Modal.Body>
 
-                    <Modal.Footer className="bg-dark text-light border-secondary p-3">
-                        <div className="d-flex justify-content-between w-100">
+                    <Modal.Footer className="bg-dark text-light border-secondary px-4 py-3">
+                        <div className="d-flex justify-content-between w-100 gap-3">
                             <Button
                                 variant="outline-secondary"
                                 onClick={handleCloseModal}
-                                className="px-4 py-2 me-3"
+                                className="px-4 py-2"
                             >
                                 Batal
                             </Button>
