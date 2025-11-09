@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import './styles/style.css'; 
+import './styles/movieGrid.css';
 import { Toaster } from 'react-hot-toast';
 import { createContext, useState, useEffect, useContext } from 'react';
 import api from './api/api';
