@@ -143,3 +143,74 @@ export const getMyReviews = async (req, res, next) => {
                 next({ status: 500, message: error.message });
         }
 };
+
+export const updateReview = async (req, res, next) => {
+    try {
+        const reviewId = req.params.id;
+        const { rating, comment } = req.body;
+        const user = req.user;
+
+        if (!rating && !comment) {
+            return next({ status: 400, message: 'Rating atau comment diperlukan untuk update' });
+        }
+
+        // cari reviewnya
+        const review = await reviewsCollection.findOne({ _id: new ObjectId(reviewId) });
+        if (!review) {
+            return next({ status: 404, message: 'Review tidak ditemukan' });
+        }
+
+        // Cek apakah user adalah Admin ATAU pemilik review
+        // bandingkan .toString() karena 'userId' adalah ObjectId dan 'user.id' adalah string
+        if (user.role !== 'admin' && review.userId.toString() !== user.id) {
+            return next({ status: 403, message: 'Forbidden: Anda tidak punya izin mengedit review ini' });
+        }
+
+        // data update
+        const updateData = {
+            updatedAt: new Date(),
+        };
+        if (rating) updateData.rating = Number(rating);
+        if (comment) updateData.comment = comment;
+
+        // Lakukan update
+        const result = await reviewsCollection.findOneAndUpdate(
+            { _id: new ObjectId(reviewId) },
+            { $set: updateData },
+            { returnDocument: 'after' } // Kirim balik dokumen yang SUDAH di-update
+        );
+
+        // Kirim kembali review yang sudah di-update
+        res.status(200).json(result);
+
+    } catch (error) {
+        next({ status: 500, error });
+    }
+};
+
+
+export const deleteReview = async (req, res, next) => {
+    try {
+        const reviewId = req.params.id;
+        const user = req.user; 
+
+        // Cari review-nya dulu
+        const review = await reviewsCollection.findOne({ _id: new ObjectId(reviewId) });
+        if (!review) {
+            return next({ status: 404, message: 'Review tidak ditemukan' });
+        }
+
+        // Otorisasi: Cek apakah user adalah Admin ATAU pemilik review
+        if (user.role !== 'admin' && review.userId.toString() !== user.id) {
+            return next({ status: 403, message: 'Forbidden: Anda tidak punya izin menghapus review ini' });
+Â       }
+
+        // Lakukan penghapusan
+        await reviewsCollection.deleteOne({ _id: new ObjectId(reviewId) });
+
+        res.status(200).json({ message: 'Review berhasil dihapus' });
+
+    } catch (error) {
+        next({ status: 500, error });
+    }
+};
