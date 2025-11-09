@@ -13,7 +13,6 @@ const Header = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Buat array tahun dari tahun sekarang mundur 30 tahun
     const currentYear = new Date().getFullYear();
     const years = Array.from(new Array(30), (val, index) => currentYear - index);
 
@@ -36,12 +35,11 @@ const Header = () => {
     };
 
     const handleSearch = (e) => {
-        e.preventDefault();
+        e.preventDefault(); // Mencegah halaman reload
         if (input.trim()) {
-            navigate(`/movies?search=${input.trim()}`); // Sesuaikan path rute pencarian Anda
-             // Atau jika menggunakan endpoint discover untuk search: navigate(`/discover?query=${input.trim()}`);
-             // Tapi biasanya search punya halaman sendiri atau pakai page movies dengan query param.
-             // Asumsi saya Anda akan pakai MovieList.jsx untuk menampilkan hasil search juga.
+            // Navigasi ke halaman search, kirim query-nya
+            navigate(`/search?query=${input.trim()}`);
+            setInput(""); // Kosongkan input setelah search
         }
     };
 
@@ -53,30 +51,38 @@ const Header = () => {
                 </Navbar.Brand>
                 
                 {/* Search Bar dengan Form agar bisa di-Enter */}
-                <Form onSubmit={handleSearch} className="seach-bar-container">
-                    <div className="input-wrapper d-flex align-items-center">
-                        <FaSearch id="search-icon" className="me-2" />
-                        <input
+                <Form onSubmit={handleSearch} className="d-flex seach-bar-container">
+                    <InputGroup className="input-wrapper d-flex align-items-center">
+                        <InputGroup.Text id="search-icon" className="bg-transparent border-0">
+                            <FaSearch />
+                        </InputGroup.Text>
+                        <Form.Control
+                            type="search"
                             placeholder="type to search..."
                             className="inputsearch border-0 bg-transparent"
-                            style={{ outline: 'none', width: '100%' }}
+                            style={{ outline: 'none', boxShadow: 'none' }}
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
+                            aria-label="Search"
                         />
-                    </div>
+                    </InputGroup>
                 </Form>
                 
                 <Navbar.Toggle aria-controls="basic-navbar-nav" />
                 <Navbar.Collapse id="basic-navbar-nav">
                     <Nav className="ms-auto nav-links fw-bold align-items-center">
                         {/* Dropdown Genre */}
-                        <Dropdown>
-                            <Dropdown.Toggle variant="link" className="nav-link text-dark fw-bold text-decoration-none border-0">
+                        <Dropdown as={Nav.Item}>
+                            <Dropdown.Toggle as={Nav.Link} id="genre-dropdown" className="nav-link text-dark fw-bold text-decoration-none border-0 bg-transparent">
                                 Genre
                             </Dropdown.Toggle>
                             <Dropdown.Menu style={{ maxHeight: '300px', overflowY: 'auto' }}>
                                 {genres.map((genre) => (
-                                    <Dropdown.Item key={genre.id} as={Link} to={`/movies?genre=${genre.id}`}>
+                                    <Dropdown.Item 
+                                        key={genre.id} 
+                                        as={Link} 
+                                        to={`/movies?genre=${genre.id}`}
+                                    >
                                         {genre.name}
                                     </Dropdown.Item>
                                 ))}
@@ -84,13 +90,17 @@ const Header = () => {
                         </Dropdown>
 
                         {/* Dropdown Tahun */}
-                        <Dropdown>
-                            <Dropdown.Toggle variant="link" className="nav-link text-dark fw-bold text-decoration-none border-0">
+                        <Dropdown as={Nav.Item}>
+                            <Dropdown.Toggle as={Nav.Link} id="year-dropdown" className="nav-link text-dark fw-bold text-decoration-none border-0 bg-transparent">
                                 Tahun
                             </Dropdown.Toggle>
                             <Dropdown.Menu style={{ maxHeight: '300px', overflowY: 'auto' }}>
                                 {years.map((year) => (
-                                    <Dropdown.Item key={year} as={Link} to={`/movies?year=${year}`}>
+                                    <Dropdown.Item 
+                                        key={year} 
+                                        as={Link} 
+                                        to={`/movies?year=${year}`}
+                                    >
                                         {year}
                                     </Dropdown.Item>
                                 ))}
@@ -109,9 +119,7 @@ const Header = () => {
                                     {user.username}
                                 </Dropdown.Toggle>
                                 <Dropdown.Menu className="profile-dropdown-menu">
-                                    {/* Ganti /account dengan /profile jika rute Anda profile */}
                                     <Dropdown.Item as={Link} to="/profile">Profil</Dropdown.Item> 
-                                    {/* Watchlist mungkin bisa digabung di halaman profil */}
                                     <Dropdown.Item as={Link} to="/profile">Watchlist</Dropdown.Item>
                                     <Dropdown.Divider />
                                     <Dropdown.Item onClick={handleLogout}>Logout</Dropdown.Item>
@@ -123,7 +131,7 @@ const Header = () => {
                                 to="/signin" 
                                 state={{ from: location.pathname }} 
                                 className="btn btn-info login-btn px-3 py-2 text-dark fw-bold"
-                                style={{ borderRadius: '20px' }} // Contoh styling tambahan
+                                style={{ borderRadius: '20px' }} 
                             >
                                 LOGIN
                             </Nav.Link>
