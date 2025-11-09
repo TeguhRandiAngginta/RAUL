@@ -15,7 +15,7 @@ import Header from './component/layout/Navbar';
 import Footer from './component/layout/Footer';
 import MovieDetail from './pages/MovieDetail';
 import MovieList from './pages/MovieList';
-
+import SearchResult from './pages/SearchResult';
 
 // Auth Context
 const AuthContext = createContext();
@@ -80,6 +80,7 @@ function AppContent() {
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/movie/:id" element={<MovieDetail />} />
           <Route path="/movies" element={<MovieList />} />
+          <Route path="/search" element={<SearchResult />} />
         </Routes>
       </main>
       {!hideLayoutRoutes.includes(location.pathname) && <Footer />}
