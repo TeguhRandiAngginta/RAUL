@@ -11,8 +11,9 @@ import Image from 'react-bootstrap/Image';
 import logo from '../assets/logo/logoWeb.png';
 import img from '../assets/logo/log1.png';
 import { useForm } from 'react-hook-form';
+import { useNavigate, useLocation } from 'react-router-dom'; // Import useNavigate dan useLocation
 import { API_BASE_URL } from '../util.js';
-import '../styles/style.css'; // Import external CSS
+import '../styles/style.css';
 
 export default function Signup() {
     const {
@@ -20,6 +21,9 @@ export default function Signup() {
         register,
         formState: { errors, isSubmitting },
     } = useForm();
+
+    const navigate = useNavigate(); // Inisialisasi navigate
+    const location = useLocation(); // Inisialisasi location
 
     const doSubmit = async values => {
         try {
@@ -33,7 +37,17 @@ export default function Signup() {
             console.log(values);
             const data = await res.json();
             if (res.status === 200) {
-                toast.success('Sign Up Successful. You are now logged in');
+                toast.success('Sign Up Successful. Silakan login untuk melanjutkan', {
+                    duration: 2000,
+                });
+                
+                // Redirect ke halaman login setelah 1.5 detik
+                // Kirim state.from jika ada, agar setelah login bisa kembali ke halaman sebelumnya
+                setTimeout(() => {
+                    navigate('/signin', { 
+                        state: { from: location.state?.from } 
+                    });
+                }, 1500);
             } else {
                 toast.error(data.message);
             }
@@ -149,9 +163,13 @@ export default function Signup() {
                             </Button>
                             <p className="mt-3 mb-5 dm-sans">
                                 Sudah Punya Akun?{' '}
-                                <a href="signin" className="link-dark">
+                                <span 
+                                    onClick={() => navigate('/signin', { state: { from: location.state?.from } })}
+                                    className="link-dark"
+                                    style={{ cursor: 'pointer' }}
+                                >
                                     <b>Masuk</b>
-                                </a>
+                                </span>
                             </p>
                         </Form>
                     </Col>
