@@ -91,11 +91,12 @@ export const searchMovies = async (req, res, next) => {
         if (!query) {
             return next({ status: 400, message: 'Query pencarian "query" diperlukan' });
         }
+        const sanitizedQuery = query.replace(/[<>]/g, '');
 
         const response = await axios.get(
-            `${BASE_URL}/search/movie`, 
-            tmdbParams({ query, page: page || 1 })
-        );
+            `${BASE_URL}/search/movie`, 
+            tmdbParams({ query: sanitizedQuery, page: page || 1 }) 
+        );
         res.status(200).json(response.data);
     } catch (error) {
         next({ status: error.response?.status || 500, message: 'Gagal mengambil data dari TMDB' });
