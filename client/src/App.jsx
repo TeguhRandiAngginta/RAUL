@@ -79,7 +79,7 @@ function AppContent() {
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/movies/:id" element={<MovieDetail />} />
-          <Route path="/movies" element={<MovieList />} />
+          <Route path="/movie" element={<MovieList />} />
           <Route path="/search" element={<SearchResult />} />
         </Routes>
       </main>

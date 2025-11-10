@@ -65,7 +65,7 @@ export default function MovieGrid() {
     };
 
     const handleMovieClick = (movieId) => {
-        navigate(`/movie/${movieId}`);
+        navigate(`/movies/${movieId}`);
     };
 
     if (loading) {
