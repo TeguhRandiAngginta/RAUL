@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom";
+import "../../styles/movieGrid.css"; // Import CSS eksternal
 
 export default function MovieGrid() {
     const [movies, setMovies] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentSlide, setCurrentSlide] = useState(0);
-    const navigate = useNavigate(); // Inisialisasi navigate
+    const navigate = useNavigate();
 
     const posterUrl = (movie) =>
         movie && movie.poster_path
@@ -15,7 +16,6 @@ export default function MovieGrid() {
     useEffect(() => {
         const fetchMovies = async () => {
             try {
-                // Fetch dari backend Anda yang sudah ada
                 const res = await fetch('http://localhost:5000/api/v1/movies/popular?page=1');
 
                 if (!res.ok) {
@@ -23,9 +23,8 @@ export default function MovieGrid() {
                 }
 
                 const data = await res.json();
-                console.log('✅ API Response:', data); // Debug log
+                console.log('✅ API Response:', data);
 
-                // Cek apakah data.results ada dan tidak kosong
                 if (data && data.results && data.results.length > 0) {
                     setMovies(data.results);
                     console.log('✅ Movies loaded:', data.results.length, 'films');
@@ -65,9 +64,8 @@ export default function MovieGrid() {
         document.getElementById('popular')?.scrollIntoView({ behavior: 'smooth' });
     };
 
-    // Fungsi untuk navigasi ke detail film
     const handleMovieClick = (movieId) => {
-        navigate(`/movies/${movieId}`);
+        navigate(`/movie/${movieId}`);
     };
 
     if (loading) {
@@ -81,7 +79,7 @@ export default function MovieGrid() {
 
     return (
         <>
-            {/* HERO SECTION - Full Screen */}
+            {/* HERO SECTION */}
             <section className="hero-section">
                 <div className="hero-pattern"></div>
                 <div className="hero-content-wrapper">
@@ -138,7 +136,7 @@ export default function MovieGrid() {
                 </div>
             </section>
 
-            {/* MOVIES SECTION - Full Screen */}
+            {/* MOVIES SECTION */}
             <section id="popular" className="movies-section">
                 <div className="section-header">
                     <h2 className="section-title">🎬 Film Populer Mingguan</h2>
@@ -147,35 +145,16 @@ export default function MovieGrid() {
 
                 <div className="swiper-container">
                     {movies.length === 0 ? (
-                        <div style={{
-                            textAlign: 'center',
-                            padding: '60px 20px',
-                            color: '#5A4A3A',
-                            background: 'rgba(255,255,255,0.8)',
-                            borderRadius: '20px',
-                            maxWidth: '600px',
-                            margin: '0 auto'
-                        }}>
-                            <div style={{ fontSize: '3rem', marginBottom: '20px' }}>🎬</div>
-                            <p style={{ fontSize: '1.3rem', marginBottom: '15px', fontWeight: '600', color: '#2A1F11' }}>
-                                Tidak Ada Film
-                            </p>
-                            <p style={{ fontSize: '1rem', marginBottom: '10px', lineHeight: '1.6' }}>
+                        <div className="empty-state">
+                            <div className="empty-icon">🎬</div>
+                            <p className="empty-title">Tidak Ada Film</p>
+                            <p className="empty-text">
                                 Pastikan backend server Anda sudah berjalan di:
                             </p>
-                            <code style={{
-                                display: 'block',
-                                background: '#2A1F11',
-                                color: '#ffc107',
-                                padding: '10px 20px',
-                                borderRadius: '8px',
-                                margin: '15px auto',
-                                fontSize: '0.95rem',
-                                maxWidth: '400px'
-                            }}>
+                            <code className="empty-code">
                                 http://localhost:5000
                             </code>
-                            <p style={{ fontSize: '0.9rem', color: '#888', marginTop: '15px' }}>
+                            <p className="empty-hint">
                                 Periksa console browser (F12) untuk detail error
                             </p>
                         </div>
@@ -197,7 +176,6 @@ export default function MovieGrid() {
                                             <div
                                                 className="movie-card"
                                                 onClick={() => handleMovieClick(movie.id)}
-                                                style={{ cursor: 'pointer' }}
                                             >
                                                 <div className="movie-poster-wrapper">
                                                     <img

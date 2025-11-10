@@ -1,17 +1,22 @@
-    * {
+/* ========================================
+    MOVIE GRID - COMPLETE EXTERNAL CSS
+   ======================================== */
+
+/* ========== GLOBAL RESET ========== */
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    }
+}
 
-    html,
-    body {
+html,
+body {
     scroll-behavior: smooth;
     overflow-x: hidden;
-    }
+}
 
-    /* ========== LOADING ========== */
-    .loading-screen {
+/* ========== LOADING SCREEN ========== */
+.loading-screen {
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -19,28 +24,28 @@
     min-height: 100vh;
     background: linear-gradient(135deg, #d9a299 0%, #f5eee6 100%);
     color: #2a1f11;
-    }
+}
 
-    .spinner {
+.spinner {
     border: 4px solid rgba(255, 255, 255, 0.3);
     border-top: 4px solid #2a1f11;
     border-radius: 50%;
     width: 50px;
     height: 50px;
     animation: spin 1s linear infinite;
-    }
+}
 
-    @keyframes spin {
+@keyframes spin {
     0% {
         transform: rotate(0deg);
     }
     100% {
         transform: rotate(360deg);
     }
-    }
+}
 
-    /* ========== HERO SECTION ========== */
-    .hero-section {
+/* ========== HERO SECTION ========== */
+.hero-section {
     min-height: 100vh;
     scroll-snap-align: start;
     background: linear-gradient(135deg, #d9a299 0%, #e8c4b8 50%, #f5eee6 100%);
@@ -51,35 +56,32 @@
     overflow: hidden;
     padding: 80px 20px 80px;
     margin: 0;
-    }
+}
 
-    .hero-pattern {
+.hero-pattern {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     opacity: 0.08;
-    background-image: radial-gradient(
-        circle at 20% 50%,
-        white 2px,
-        transparent 2px
-        ),
+    background-image: 
+        radial-gradient(circle at 20% 50%, white 2px, transparent 2px),
         radial-gradient(circle at 80% 50%, white 2px, transparent 2px);
     background-size: 60px 60px;
     animation: patternMove 20s linear infinite;
-    }
+}
 
-    @keyframes patternMove {
+@keyframes patternMove {
     0% {
         background-position: 0 0;
     }
     100% {
         background-position: 60px 60px;
     }
-    }
+}
 
-    .hero-content-wrapper {
+.hero-content-wrapper {
     max-width: 1200px;
     margin: 0 auto;
     position: relative;
@@ -90,39 +92,39 @@
     align-items: center;
     gap: 40px;
     width: 100%;
-    }
+}
 
-    .hero-text {
+.hero-text {
     animation: fadeInUp 0.8s ease;
-    }
+}
 
-    .hero-title {
+.hero-title {
     font-size: clamp(2.5rem, 6vw, 4rem);
     font-weight: 800;
     color: #2a1f11;
     margin-bottom: 20px;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
     line-height: 1.2;
-    }
+}
 
-    .hero-subtitle {
+.hero-subtitle {
     font-size: clamp(1.1rem, 2vw, 1.4rem);
     color: #3e2f1c;
     max-width: 700px;
     line-height: 1.6;
-    }
+}
 
-    /* Info Cards */
-    .info-cards-container {
+/* ========== INFO CARDS ========== */
+.info-cards-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 30px;
     width: 100%;
     max-width: 1000px;
     animation: fadeInUp 0.8s ease 0.2s backwards;
-    }
+}
 
-    .info-card {
+.info-card {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     border-radius: 20px;
@@ -130,14 +132,14 @@
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
     text-align: center;
-    }
+}
 
-    .info-card:hover {
+.info-card:hover {
     transform: translateY(-10px);
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-    }
+}
 
-    .icon-circle {
+.icon-circle {
     width: 80px;
     height: 80px;
     background: linear-gradient(135deg, #fff 0%, #f5eee6 100%);
@@ -147,22 +149,23 @@
     justify-content: center;
     margin: 0 auto 20px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-    }
+}
 
-    .info-card h4 {
+.info-card h4 {
     font-size: 1.3rem;
     font-weight: 700;
     color: #2a1f11;
     margin-bottom: 12px;
-    }
+}
 
-    .info-card p {
+.info-card p {
     font-size: 1rem;
     color: #5a4a3a;
     line-height: 1.6;
-    }
+}
 
-    .cta-button {
+/* ========== CTA BUTTON ========== */
+.cta-button {
     background: linear-gradient(135deg, #c48880 0%, #d9a299 100%);
     border: none;
     padding: 16px 45px;
@@ -174,32 +177,32 @@
     transition: all 0.3s ease;
     box-shadow: 0 5px 20px rgba(217, 162, 153, 0.4);
     animation: fadeInUp 0.8s ease 0.4s backwards;
-    }
+}
 
-    .cta-button:hover {
+.cta-button:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 30px rgba(217, 162, 153, 0.6);
-    }
+}
 
-    /* Scroll Indicator */
-    .scroll-indicator {
+/* ========== SCROLL INDICATOR ========== */
+.scroll-indicator {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 10px;
     animation: bounce 2s infinite;
     margin-top: 20px;
-    }
+}
 
-    .mouse {
+.mouse {
     width: 26px;
     height: 40px;
     border: 2px solid rgba(42, 31, 17, 0.6);
     border-radius: 15px;
     position: relative;
-    }
+}
 
-    .mouse::before {
+.mouse::before {
     content: '';
     width: 4px;
     height: 8px;
@@ -210,9 +213,9 @@
     left: 50%;
     transform: translateX(-50%);
     animation: scroll 1.5s infinite;
-    }
+}
 
-    @keyframes scroll {
+@keyframes scroll {
     0%,
     100% {
         opacity: 0;
@@ -222,9 +225,9 @@
         opacity: 1;
         top: 14px;
     }
-    }
+}
 
-    @keyframes bounce {
+@keyframes bounce {
     0%,
     100% {
         transform: translateY(0);
@@ -232,14 +235,14 @@
     50% {
         transform: translateY(-10px);
     }
-    }
+}
 
-    .scroll-indicator p {
+.scroll-indicator p {
     font-size: 0.85rem;
     color: rgba(42, 31, 17, 0.7);
-    }
+}
 
-    @keyframes fadeInUp {
+@keyframes fadeInUp {
     from {
         opacity: 0;
         transform: translateY(30px);
@@ -248,10 +251,10 @@
         opacity: 1;
         transform: translateY(0);
     }
-    }
+}
 
-    /* ========== MOVIES SECTION ========== */
-    .movies-section {
+/* ========== MOVIES SECTION ========== */
+.movies-section {
     min-height: 100vh;
     scroll-snap-align: start;
     background: linear-gradient(180deg, #f0e4d3 0%, #e8d4c4 50%, #dcc5b2 100%);
@@ -262,53 +265,54 @@
     flex-direction: column;
     justify-content: center;
     margin: 0;
-    }
+}
 
-    .section-header {
+.section-header {
     text-align: center;
     margin-bottom: 60px;
     position: relative;
     z-index: 2;
-    }
+}
 
-    .section-title {
+.section-title {
     font-size: clamp(2rem, 4vw, 3rem);
     font-weight: 700;
     color: #2a1f11;
     margin-bottom: 15px;
-    }
+}
 
-    .section-subtitle {
+.section-subtitle {
     font-size: 1.2rem;
     color: #5a4a3a;
     font-weight: 500;
-    }
+}
 
-    .swiper-container {
+/* ========== SWIPER CONTAINER ========== */
+.swiper-container {
     position: relative;
     max-width: 1600px;
     margin: 0 auto;
     width: 100%;
-    }
+}
 
-    .swiper-wrapper {
+.swiper-wrapper {
     overflow: hidden;
     padding: 20px 60px 40px;
-    }
+}
 
-    .swiper-track {
+.swiper-track {
     display: flex;
     gap: 24px;
     transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+}
 
-    .swiper-slide {
+.swiper-slide {
     flex: 0 0 calc((100% - 24px * 4.5) / 5.5);
     min-width: 0;
-    }
+}
 
-    /* Movie Card */
-    .movie-card {
+/* ========== MOVIE CARD ========== */
+.movie-card {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     border-radius: 18px;
@@ -316,22 +320,23 @@
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
     transition: all 0.3s ease;
     height: 100%;
-    }
+    cursor: pointer;
+}
 
-    .movie-card:hover {
+.movie-card:hover {
     transform: translateY(-12px) scale(1.02);
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
-    }
+}
 
-    .movie-poster-wrapper {
+.movie-poster-wrapper {
     width: 100%;
     padding-top: 150%;
     position: relative;
     background: linear-gradient(135deg, #dcc5b2, #c9b5a3);
     overflow: hidden;
-    }
+}
 
-    .movie-poster {
+.movie-poster {
     position: absolute;
     top: 0;
     left: 0;
@@ -339,18 +344,18 @@
     height: 100%;
     object-fit: cover;
     transition: transform 0.3s ease;
-    }
+}
 
-    .movie-card:hover .movie-poster {
+.movie-card:hover .movie-poster {
     transform: scale(1.1);
-    }
+}
 
-    .movie-info {
+.movie-info {
     padding: 18px;
     background: rgba(255, 255, 255, 0.98);
-    }
+}
 
-    .movie-title {
+.movie-title {
     font-size: 1.05rem;
     font-weight: 700;
     color: #2a1f11;
@@ -362,9 +367,9 @@
     -webkit-box-orient: vertical;
     min-height: 50px;
     line-height: 1.5;
-    }
+}
 
-    .movie-rating {
+.movie-rating {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -372,10 +377,10 @@
     font-weight: 700;
     color: #2a1f11;
     font-size: 1rem;
-    }
+}
 
-    /* Navigation */
-    .swiper-nav {
+/* ========== SWIPER NAVIGATION ========== */
+.swiper-nav {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
@@ -394,31 +399,79 @@
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
-    }
+}
 
-    .swiper-nav:hover {
+.swiper-nav:hover {
     background: #c48880;
     color: white;
     transform: translateY(-50%) scale(1.15);
     box-shadow: 0 8px 30px rgba(196, 136, 128, 0.4);
-    }
+}
 
-    .swiper-prev {
+.swiper-prev {
     left: 10px;
-    }
-    .swiper-next {
-    right: 10px;
-    }
+}
 
-    /* Decorative Elements */
-    .section-decoration {
+.swiper-next {
+    right: 10px;
+}
+
+/* ========== EMPTY STATE ========== */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #5a4a3a;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.empty-icon {
+    font-size: 3rem;
+    margin-bottom: 20px;
+}
+
+.empty-title {
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+    font-weight: 600;
+    color: #2a1f11;
+}
+
+.empty-text {
+    font-size: 1rem;
+    margin-bottom: 10px;
+    line-height: 1.6;
+}
+
+.empty-code {
+    display: block;
+    background: #2a1f11;
+    color: #ffc107;
+    padding: 10px 20px;
+    border-radius: 8px;
+    margin: 15px auto;
+    font-size: 0.95rem;
+    max-width: 400px;
+    font-family: 'Courier New', monospace;
+}
+
+.empty-hint {
+    font-size: 0.9rem;
+    color: #888;
+    margin-top: 15px;
+}
+
+/* ========== DECORATIVE ELEMENTS ========== */
+.section-decoration {
     position: absolute;
     inset: 0;
     pointer-events: none;
     overflow: hidden;
-    }
+}
 
-    .deco-circle {
+.deco-circle {
     position: absolute;
     border-radius: 50%;
     background: radial-gradient(
@@ -426,33 +479,33 @@
         rgba(255, 255, 255, 0.3) 0%,
         transparent 70%
     );
-    }
+}
 
-    .deco-1 {
+.deco-1 {
     width: 300px;
     height: 300px;
     top: -100px;
     right: -100px;
     animation: float 15s ease-in-out infinite;
-    }
+}
 
-    .deco-2 {
+.deco-2 {
     width: 200px;
     height: 200px;
     bottom: -50px;
     left: -50px;
     animation: float 12s ease-in-out infinite reverse;
-    }
+}
 
-    .deco-3 {
+.deco-3 {
     width: 150px;
     height: 150px;
     top: 50%;
     left: 10%;
     animation: float 18s ease-in-out infinite;
-    }
+}
 
-    @keyframes float {
+@keyframes float {
     0%,
     100% {
         transform: translateY(0) rotate(0deg);
@@ -460,16 +513,19 @@
     50% {
         transform: translateY(-20px) rotate(10deg);
     }
-    }
+}
 
-    /* ========== RESPONSIVE ========== */
-    @media (max-width: 1200px) {
+/* ========================================
+    RESPONSIVE DESIGN
+   ======================================== */
+
+@media (max-width: 1200px) {
     .swiper-slide {
         flex: 0 0 calc((100% - 24px * 3.5) / 4.5);
     }
-    }
+}
 
-    @media (max-width: 992px) {
+@media (max-width: 992px) {
     .swiper-slide {
         flex: 0 0 calc((100% - 24px * 2.5) / 3.5);
     }
@@ -478,9 +534,9 @@
     .movies-section {
         padding: 60px 20px;
     }
-    }
+}
 
-    @media (max-width: 768px) {
+@media (max-width: 768px) {
     .info-cards-container {
         grid-template-columns: 1fr;
         gap: 20px;
@@ -499,9 +555,9 @@
         height: 45px;
         font-size: 22px;
     }
-    }
+}
 
-    @media (max-width: 576px) {
+@media (max-width: 576px) {
     .swiper-slide {
         flex: 0 0 calc((100% - 16px * 0.5) / 1.5);
     }
@@ -513,4 +569,13 @@
     .swiper-wrapper {
         padding: 20px 45px 40px;
     }
+
+    .empty-state {
+        padding: 40px 15px;
     }
+
+    .empty-code {
+        font-size: 0.85rem;
+        padding: 8px 15px;
+    }
+}
