@@ -41,10 +41,19 @@ export const createReview = async (req, res, next) => {
                         updatedAt: new Date(),
                 };
 
-                // Simpan ke koleksi 'reviews'
+                // 1. Simpan ke koleksi 'reviews'
                 const result = await reviewsCollection.insertOne(newReview);
 
-                // Ambil data user untuk response
+                // 2. ✅ UPDATE: Tambahkan reviewId ke array 'reviews' di collection 'users'
+                await usersCollection.updateOne(
+                        { _id: new ObjectId(userId) },
+                        {
+                                $push: { reviews: result.insertedId },
+                                $set: { updatedAt: new Date() }
+                        }
+                );
+
+                // 3. Ambil data user untuk response
                 const user = await usersCollection.findOne(
                         { _id: new ObjectId(userId) },
                         { projection: { username: 1 } }
@@ -145,72 +154,79 @@ export const getMyReviews = async (req, res, next) => {
 };
 
 export const updateReview = async (req, res, next) => {
-    try {
-        const reviewId = req.params.id;
-        const { rating, comment } = req.body;
-        const user = req.user;
+        try {
+                const reviewId = req.params.id;
+                const { rating, comment } = req.body;
+                const user = req.user;
 
-        if (!rating && !comment) {
-            return next({ status: 400, message: 'Rating atau comment diperlukan untuk update' });
-        }
+                if (!rating && !comment) {
+                        return next({ status: 400, message: 'Rating atau comment diperlukan untuk update' });
+                }
 
-        // cari reviewnya
-        const review = await reviewsCollection.findOne({ _id: new ObjectId(reviewId) });
-        if (!review) {
-            return next({ status: 404, message: 'Review tidak ditemukan' });
-        }
+                // cari reviewnya
+                const review = await reviewsCollection.findOne({ _id: new ObjectId(reviewId) });
+                if (!review) {
+                        return next({ status: 404, message: 'Review tidak ditemukan' });
+                }
 
-        // Cek apakah user adalah Admin ATAU pemilik review
-        // bandingkan .toString() karena 'userId' adalah ObjectId dan 'user.id' adalah string
-        if (user.role !== 'admin' && review.userId.toString() !== user.id) {
-            return next({ status: 403, message: 'Forbidden: Anda tidak punya izin mengedit review ini' });
-        }
+                // Cek apakah user adalah Admin ATAU pemilik review
+                if (user.role !== 'admin' && review.userId.toString() !== user.id) {
+                        return next({ status: 403, message: 'Forbidden: Anda tidak punya izin mengedit review ini' });
+                }
 
-        // data update
-        const updateData = {
-            updatedAt: new Date(),
-        };
-        if (rating) updateData.rating = Number(rating);
-        if (comment) updateData.comment = comment;
+                // data update
+                const updateData = {
+                        updatedAt: new Date(),
+                };
+                if (rating) updateData.rating = Number(rating);
+                if (comment) updateData.comment = comment;
 
-        // Lakukan update
-        const result = await reviewsCollection.findOneAndUpdate(
-            { _id: new ObjectId(reviewId) },
-            { $set: updateData },
-            { returnDocument: 'after' } // Kirim balik dokumen yang SUDAH di-update
-        );
+                // Lakukan update
+                const result = await reviewsCollection.findOneAndUpdate(
+                        { _id: new ObjectId(reviewId) },
+                        { $set: updateData },
+                        { returnDocument: 'after' }
+                );
 
-        // Kirim kembali review yang sudah di-update
-        res.status(200).json(result);
+                res.status(200).json(result);
 
-    } catch (error) {
-        next({ status: 500, error });
-    }
+        } catch (error) {
+                next({ status: 500, error });
+        }
 };
 
 
 export const deleteReview = async (req, res, next) => {
-    try {
-        const reviewId = req.params.id;
-        const user = req.user; 
+        try {
+                const reviewId = req.params.id;
+                const user = req.user;
 
-        // Cari review-nya dulu
-        const review = await reviewsCollection.findOne({ _id: new ObjectId(reviewId) });
-        if (!review) {
-            return next({ status: 404, message: 'Review tidak ditemukan' });
-        }
+                // Cari review-nya dulu
+                const review = await reviewsCollection.findOne({ _id: new ObjectId(reviewId) });
+                if (!review) {
+                        return next({ status: 404, message: 'Review tidak ditemukan' });
+                }
 
-        // Otorisasi: Cek apakah user adalah Admin ATAU pemilik review
-        if (user.role !== 'admin' && review.userId.toString() !== user.id) {
-            return next({ status: 403, message: 'Forbidden: Anda tidak punya izin menghapus review ini' });
-Â       }
+                // Otorisasi: Cek apakah user adalah Admin ATAU pemilik review
+                if (user.role !== 'admin' && review.userId.toString() !== user.id) {
+                        return next({ status: 403, message: 'Forbidden: Anda tidak punya izin menghapus review ini' });
+                }
 
-        // Lakukan penghapusan
-        await reviewsCollection.deleteOne({ _id: new ObjectId(reviewId) });
+                // 1. Lakukan penghapusan dari collection reviews
+                await reviewsCollection.deleteOne({ _id: new ObjectId(reviewId) });
 
-        res.status(200).json({ message: 'Review berhasil dihapus' });
+                // 2. ✅ UPDATE: Hapus reviewId dari array 'reviews' di collection 'users'
+                await usersCollection.updateOne(
+                        { _id: review.userId },
+                        {
+                                $pull: { reviews: new ObjectId(reviewId) },
+                                $set: { updatedAt: new Date() }
+                        }
+                );
 
-    } catch (error) {
-        next({ status: 500, error });
-    }
+                res.status(200).json({ message: 'Review berhasil dihapus' });
+
+        } catch (error) {
+                next({ status: 500, error });
+        }
 };
