@@ -1,0 +1,137 @@
+/* Watchlist Page - Ultra Simple & Compact */
+
+/* Loading State */
+.watchlist-loading {
+    min-height: 100vh;
+    background: #1a1a1a;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Main Page */
+.watchlist-page {
+    min-height: 100vh;
+    background: #1a1a1a;
+    padding-top: 70px;
+}
+
+/* Watchlist Card - Small & Compact */
+.watchlist-card {
+    background: #2a2a2a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.watchlist-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
+    border-color: rgba(255, 193, 7, 0.3);
+}
+
+/* Poster Wrapper */
+.poster-wrapper {
+    position: relative;
+    aspect-ratio: 2/3;
+    overflow: hidden;
+}
+
+.poster-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.watchlist-card:hover .poster-wrapper img {
+    transform: scale(1.05);
+}
+
+/* Remove Button - Always Visible */
+.remove-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    border-radius: 5px;
+    background: rgba(220, 38, 38, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.remove-btn:hover:not(:disabled) {
+    background: #dc2626;
+    transform: scale(1.1);
+}
+
+.remove-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Card Body - Compact */
+.watchlist-card .card-body {
+    padding: 6px !important;
+}
+
+/* Movie Title */
+.movie-title {
+    font-size: 0.8rem;
+    line-height: 1.2;
+    font-weight: 600;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-height: 30px;
+}
+
+/* Movie Year */
+.movie-year {
+    font-size: 0.7rem;
+    margin-bottom: 0;
+}
+
+/* Date Added */
+.date-added {
+    display: flex;
+    align-items: center;
+    font-size: 0.65rem;
+    color: rgba(255, 193, 7, 0.8);
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+    .movie-title {
+        font-size: 0.8rem;
+        min-height: 32px;
+    }
+    
+    .movie-year {
+        font-size: 0.7rem;
+    }
+    
+    .date-added {
+        font-size: 0.65rem;
+    }
+    
+    .remove-btn {
+        width: 28px;
+        height: 28px;
+    }
+}

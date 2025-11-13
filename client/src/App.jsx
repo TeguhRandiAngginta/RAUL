@@ -1,9 +1,11 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { createContext, useState, useEffect, useContext } from 'react';
+import { useDispatch } from 'react-redux';
+import { setWatchlist, clearUser } from './redux/userSlice';
+import { Toaster } from 'react-hot-toast';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles/style.css'; 
 import './styles/movieGrid.css';
-import { Toaster } from 'react-hot-toast';
-import { createContext, useState, useEffect, useContext } from 'react';
 import api from './api/api';
 import Home from './pages/Home';
 import SignIn from './pages/Signin';
@@ -17,14 +19,15 @@ import MovieDetail from './pages/MovieDetail';
 import MovieList from './pages/MovieList';
 import SearchResult from './pages/SearchResult';
 import MyReviews from './pages/MyReviews';
+import Watchlist from './pages/Watchlist';
 
-// Auth Context
 const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
 function AppContent() {
   const location = useLocation();
+  const dispatch = useDispatch();
   const hideLayoutRoutes = ['/signin', '/signup', '/forget-password', '/privacy-policy'];
   
   const [user, setUser] = useState(null);
@@ -38,8 +41,13 @@ function AppContent() {
     try {
       const res = await api.get('/users/profile');
       setUser({ username: res.data.username });
+      
+      const watchlistRes = await api.get('/users/watchlist/me');
+      dispatch(setWatchlist(watchlistRes.data || []));
+      
     } catch (error) {
       setUser(null); 
+      dispatch(setWatchlist([]));
     } finally {
       setIsLoading(false);
     }
@@ -49,6 +57,9 @@ function AppContent() {
     const res = await api.post('/auth/login', { email, password });
     if (res.status === 200) {
       setUser({ username: res.data.username });
+      
+      const watchlistRes = await api.get('/users/watchlist/me');
+      dispatch(setWatchlist(watchlistRes.data || []));
     }
     return res.data;
   };
@@ -60,12 +71,21 @@ function AppContent() {
       console.error("Logout failed", error);
     } finally {
       setUser(null);
+      dispatch(clearUser());
     }
   };
 
   const value = { user, login, logout, isLoading };
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "100vh" }}>
+        <div className="spinner-border text-warning" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider value={value}>
@@ -83,13 +103,13 @@ function AppContent() {
           <Route path="/movies" element={<MovieList />} />
           <Route path="/search" element={<SearchResult />} />
           <Route path="/my-reviews" element={<MyReviews />} />
+          <Route path="/watchlist" element={<Watchlist />} />
         </Routes>
       </main>
       {!hideLayoutRoutes.includes(location.pathname) && <Footer />}
     </AuthContext.Provider>
   );
 }
-
 
 export default function App() {
   return (
