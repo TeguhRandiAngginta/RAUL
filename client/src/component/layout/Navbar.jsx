@@ -121,6 +121,7 @@ const Header = () => {
                                 <Dropdown.Menu className="profile-dropdown-menu">
                                     <Dropdown.Item as={Link} to="/profile">Profil</Dropdown.Item> 
                                     <Dropdown.Item as={Link} to="/profile">Watchlist</Dropdown.Item>
+                                    <Dropdown.Item as={Link} to="/my-reviews">Review</Dropdown.Item>
                                     <Dropdown.Divider />
                                     <Dropdown.Item onClick={handleLogout}>Logout</Dropdown.Item>
                                 </Dropdown.Menu>

@@ -16,6 +16,7 @@ import Footer from './component/layout/Footer';
 import MovieDetail from './pages/MovieDetail';
 import MovieList from './pages/MovieList';
 import SearchResult from './pages/SearchResult';
+import MyReviews from './pages/MyReviews';
 
 // Auth Context
 const AuthContext = createContext();
@@ -81,6 +82,7 @@ function AppContent() {
           <Route path="/movie/:id" element={<MovieDetail />} />
           <Route path="/movie" element={<MovieList />} />
           <Route path="/search" element={<SearchResult />} />
+          <Route path="/my-reviews" element={<MyReviews />} />
         </Routes>
       </main>
       {!hideLayoutRoutes.includes(location.pathname) && <Footer />}

@@ -1,0 +1,71 @@
+/* Komponen StarRating di Modal */
+.star-label {
+    cursor: pointer;
+}
+
+.star-input {
+    display: none;
+}
+
+/* Wrapper & Overlay Halaman Utama */
+.movie-detail-wrapper {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+    color: #fff;
+    position: relative;
+}
+
+.movie-detail-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+}
+
+.movie-detail-content {
+    position: relative;
+    z-index: 2;
+}
+
+/* State Loading / Not Found */
+.movie-detail-state-container {
+    min-height: 100vh;
+    background-color: #1a1a1a;
+}
+
+/* Poster Film */
+.movie-poster-img {
+    width: 100%;
+    max-width: 300px;
+    border: 2px solid #444;
+}
+
+/* Info Teks */
+.movie-overview {
+    color: #ccc;
+    line-height: 1.8;
+}
+
+.genre-badge {
+    font-size: 0.9rem;
+}
+
+.tmdb-rating-text {
+    font-size: 0.9rem;
+}
+
+/* Bagian Review */
+.review-card {
+    background-color: #1b1b1b;
+    border: 1px solid #2a2a2a;
+}
+
+/* Modal Review Textarea */
+.review-textarea {
+    width: 90%;
+    max-width: 500px;
+    resize: none;
+    text-align: center;
+}

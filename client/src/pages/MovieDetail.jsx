@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../App.jsx";
+import { useSelector, useDispatch } from 'react-redux';
+import { toggleWatchlistState } from '../redux/userSlice';
 import api from "../api/api";
-import toast from 'react-hot-toast'; // Import toast
+import toast from 'react-hot-toast';
+import { useAuth } from "../App.jsx"; // <-- 1. KEMBALIKAN IMPORT USEAUTH
 import {
     Container,
     Row,
@@ -16,10 +18,12 @@ import {
     StarFill,
     EyeFill,
     HeartFill,
-    PlusCircle,
     ArrowLeft,
+    BookmarkPlus,
+    BookmarkCheckFill,
 } from "react-bootstrap-icons";
 import { FaStar } from "react-icons/fa";
+import '../styles/MovieDetail.css'; // Import file CSS yang sudah dipisah
 
 // Komponen StarRating kustom untuk di dalam Modal
 const StarRating = ({ rating, setRating, hover, setHover }) => {
@@ -28,13 +32,13 @@ const StarRating = ({ rating, setRating, hover, setHover }) => {
             {[...Array(5)].map((star, index) => {
                 const ratingValue = index + 1;
                 return (
-                    <label key={index} style={{ cursor: "pointer" }}>
+                    <label key={index} className="star-label">
                         <input
                             type="radio"
                             name="rating"
                             value={ratingValue}
                             onClick={() => setRating(ratingValue)}
-                            style={{ display: "none" }}
+                            className="star-input"
                         />
                         <FaStar
                             size={40}
@@ -54,17 +58,24 @@ export default function MovieDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
-    const { user } = useAuth();
+    const dispatch = useDispatch();
+    
+    // --- INI PERBAIKANNYA ---
+    const { user } = useAuth(); // <-- 2. Gunakan useAuth() untuk mengecek status login
+    const { watchlist } = useSelector((state) => state.user); // <-- 3. Gunakan Redux HANYA untuk watchlist
+    // ---------------------
 
     const [movie, setMovie] = useState(null);
     const [loading, setLoading] = useState(true);
-
-    // State untuk Modal dan Review
+    const [watchlistLoading, setWatchlistLoading] = useState(false);
     const [reviews, setReviews] = useState([]);
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [userRating, setUserRating] = useState(0);
     const [userReview, setUserReview] = useState("");
     const [hoverRating, setHoverRating] = useState(0);
+
+    const numericMovieId = Number(id);
+    const isMovieInWatchlist = watchlist.includes(numericMovieId);
 
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -72,14 +83,10 @@ export default function MovieDetail() {
         const fetchMovieData = async () => {
             setLoading(true);
             try {
-                // Ambil detail film DARI BACKEND
                 const movieRes = await api.get(`/movies/${id}`);
                 setMovie(movieRes.data);
-
-                // Ambil review untuk film ini DARI BACKEND
                 const reviewsRes = await api.get(`/reviews/movie/${id}`);
                 setReviews(reviewsRes.data);
-
             } catch (error) {
                 console.error("Gagal ambil data film atau review:", error);
                 toast.error("Gagal memuat data film");
@@ -91,22 +98,20 @@ export default function MovieDetail() {
         fetchMovieData();
     }, [id]);
 
-    // Pengecekan login saat tombol "Rate" diklik
     const handleShowModal = () => {
-        if (user) {
+        if (user) { // <-- 4. Ganti 'currentUser' menjadi 'user' dari useAuth
             setShowReviewModal(true);
         } else {
-            // Mengarahkan ke login dan menyimpan halaman saat ini
             toast.error("Silakan login terlebih dahulu", {
                 duration: 2000,
+                style: { background: '#333', color: '#fff' },
             });
-
-            // Tambahkan delay 1.5 detik sebelum redirect
             setTimeout(() => {
-                navigate("/signin", { state: { from: { pathname: location.pathname } } });
+                navigate("/signin", { state: { from: location } });
             }, 1300);
         }
     };
+
     const handleCloseModal = () => {
         setShowReviewModal(false);
         setUserRating(0);
@@ -114,7 +119,6 @@ export default function MovieDetail() {
         setHoverRating(0);
     };
 
-    // Kirim review ke backend
     const handleReviewSubmit = async (e) => {
         e.preventDefault();
 
@@ -122,10 +126,7 @@ export default function MovieDetail() {
             toast.error("Harap isi rating bintang!", {
                 duration: 3000,
                 position: 'top-center',
-                style: {
-                    background: '#333',
-                    color: '#fff',
-                },
+                style: { background: '#333', color: '#fff' },
             });
             return;
         }
@@ -134,10 +135,7 @@ export default function MovieDetail() {
             toast.error("Harap isi ulasan Anda!", {
                 duration: 3000,
                 position: 'top-center',
-                style: {
-                    background: '#333',
-                    color: '#fff',
-                },
+                style: { background: '#333', color: '#fff' },
             });
             return;
         }
@@ -149,41 +147,64 @@ export default function MovieDetail() {
         };
 
         try {
-            // Kirim data ke API
             const res = await api.post('/reviews', reviewData);
-
-            // Backend sudah return review dengan data user
             setReviews([res.data, ...reviews]);
             handleCloseModal();
-
             toast.success('Review berhasil dikirim! 🎉', {
                 duration: 3000,
                 position: 'top-center',
-                style: {
-                    background: '#333',
-                    color: '#fff',
-                },
+                style: { background: '#333', color: '#fff' },
             });
-
         } catch (error) {
             console.error("Gagal mengirim review:", error);
             toast.error(error.response?.data?.message || "Gagal menyimpan review", {
                 duration: 4000,
                 position: 'top-center',
-                style: {
-                    background: '#333',
-                    color: '#fff',
-                },
+                style: { background: '#333', color: '#fff' },
             });
         }
     };
 
+    const handleToggleWatchlist = async () => {
+        if (!user) { // <-- 5. Ganti 'currentUser' menjadi 'user' dari useAuth
+            toast.error("Anda harus login untuk menambah watchlist", {
+                duration: 2000,
+                style: { background: '#333', color: '#fff' },
+            });
+            setTimeout(() => {
+                navigate('/signin', { state: { from: location } });
+            }, 1300);
+            return;
+        }
+
+        setWatchlistLoading(true);
+        const apiCall = api.post('/users/watchlist/toggle', {
+            tmdbMovieId: numericMovieId,
+        });
+
+        toast.promise(
+            apiCall,
+            {
+                loading: 'Memperbarui watchlist...',
+                success: (res) => {
+                    dispatch(toggleWatchlistState(numericMovieId));
+                    setWatchlistLoading(false);
+                    return res.data.message;
+                },
+                error: (err) => {
+                    setWatchlistLoading(false);
+                    return err.response?.data?.message || 'Gagal memperbarui watchlist';
+                },
+            },
+            {
+                style: { background: '#333', color: '#fff' },
+            }
+        );
+    };
+
     if (loading) {
         return (
-            <div
-                className="text-center mt-5"
-                style={{ minHeight: "100vh", backgroundColor: "#1a1a1a" }}
-            >
+            <div className="text-center mt-5 movie-detail-state-container">
                 <Spinner animation="border" variant="warning" />
                 <p className="mt-3 text-light">Memuat detail film...</p>
             </div>
@@ -192,10 +213,7 @@ export default function MovieDetail() {
 
     if (!movie) {
         return (
-            <div
-                className="text-center mt-5"
-                style={{ minHeight: "100vh", backgroundColor: "#1a1a1a" }}
-            >
+            <div className="text-center mt-5 movie-detail-state-container">
                 <h2 className="text-light">Film tidak ditemukan 😢</h2>
                 <Button variant="warning" className="mt-3" onClick={() => navigate(-1)}>
                     <ArrowLeft className="me-2" />
@@ -205,39 +223,23 @@ export default function MovieDetail() {
         );
     }
 
-    // Ambil director dari credits
     const director =
         movie.credits?.crew?.find((person) => person.job === "Director")?.name ||
         "N/A";
 
     return (
         <div
+            className="movie-detail-wrapper"
             style={{
                 backgroundImage: movie.backdrop_path
                     ? `url(https://image.tmdb.org/t/p/original${movie.backdrop_path})`
                     : `url(https://image.tmdb.org/t/p/w500${movie.poster_path})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                backgroundRepeat: "no-repeat",
-                minHeight: "100vh",
-                color: "#fff",
-                position: "relative",
             }}
         >
-            {/* Overlay gelap */}
-            <div
-                style={{
-                    position: "absolute",
-                    inset: 0,
-                    background: "rgba(0,0,0,0.75)",
-                    backdropFilter: "blur(8px)",
-                }}
-            ></div>
+            <div className="movie-detail-overlay"></div>
 
-            {/* Konten utama */}
-            <Container className="position-relative py-5" style={{ zIndex: 2 }}>
+            <Container className="py-5 movie-detail-content">
                 <Row className="align-items-center">
-                    {/* Poster */}
                     <Col md={4} className="text-center mb-4">
                         <img
                             src={
@@ -246,12 +248,7 @@ export default function MovieDetail() {
                                     : "https://via.placeholder.com/300x450?text=No+Image"
                             }
                             alt={movie.title}
-                            className="rounded shadow-lg"
-                            style={{
-                                width: "100%",
-                                maxWidth: "300px",
-                                border: "2px solid #444",
-                            }}
+                            className="rounded shadow-lg movie-poster-img"
                         />
                         <div className="d-flex justify-content-center gap-3 mt-3">
                             <div className="text-center">
@@ -269,7 +266,6 @@ export default function MovieDetail() {
                         </div>
                     </Col>
 
-                    {/* Detail kanan */}
                     <Col md={8}>
                         <h1 className="fw-bold">{movie.title}</h1>
                         <p className="text-secondary mb-1">
@@ -282,18 +278,16 @@ export default function MovieDetail() {
                             </p>
                         )}
 
-                        <p style={{ color: "#ccc", lineHeight: "1.8" }}>
+                        <p className="movie-overview">
                             {movie.overview || "Tidak ada deskripsi tersedia."}
                         </p>
 
-                        {/* Genre badges */}
                         {movie.genres && movie.genres.length > 0 && (
                             <div className="mb-3">
                                 {movie.genres.map((genre) => (
                                     <span
                                         key={genre.id}
-                                        className="badge bg-secondary me-2"
-                                        style={{ fontSize: "0.9rem" }}
+                                        className="badge bg-secondary me-2 genre-badge"
                                     >
                                         {genre.name}
                                     </span>
@@ -315,8 +309,16 @@ export default function MovieDetail() {
                             <Button variant="outline-light" onClick={handleShowModal}>
                                 <StarFill /> Rate
                             </Button>
-                            <Button variant="outline-light">
-                                <PlusCircle /> Watchlist
+                            <Button
+                                variant={isMovieInWatchlist ? "warning" : "outline-light"}
+                                onClick={handleToggleWatchlist}
+                                disabled={watchlistLoading}
+                            >
+                                {isMovieInWatchlist ?
+                                    <BookmarkCheckFill className="me-2" /> :
+                                    <BookmarkPlus className="me-2" />
+                                }
+                                {watchlistLoading ? 'Menyimpan...' : (isMovieInWatchlist ? 'Hapus Watchlist' : 'Tambah Watchlist')}
                             </Button>
                         </div>
 
@@ -341,8 +343,7 @@ export default function MovieDetail() {
                                 {(movie.vote_average / 2).toFixed(1)}/5
                             </span>
                             <span
-                                className="ms-2 text-secondary"
-                                style={{ fontSize: "0.9rem" }}
+                                className="ms-2 text-secondary tmdb-rating-text"
                             >
                                 (Rating TMDB: {movie.vote_average?.toFixed(1)}/10)
                             </span>
@@ -360,11 +361,7 @@ export default function MovieDetail() {
                             reviews.map((rev) => (
                                 <div
                                     key={rev._id}
-                                    className="p-3 mb-3 rounded"
-                                    style={{
-                                        backgroundColor: "#1b1b1b",
-                                        border: "1px solid #2a2a2a",
-                                    }}
+                                    className="p-3 mb-3 rounded review-card"
                                 >
                                     <p className="fw-bold text-warning mb-1">
                                         {rev.user?.username || "User"}{" "}
@@ -422,13 +419,7 @@ export default function MovieDetail() {
                                 placeholder="Bagikan pendapat Anda tentang film ini..."
                                 value={userReview}
                                 onChange={(e) => setUserReview(e.target.value)}
-                                className="bg-dark text-light border-secondary rounded p-3"
-                                style={{
-                                    width: "90%",
-                                    maxWidth: "500px",
-                                    resize: "none",
-                                    textAlign: "center",
-                                }}
+                                className="bg-dark text-light border-secondary rounded p-3 review-textarea"
                             />
                         </Form.Group>
                     </Modal.Body>
