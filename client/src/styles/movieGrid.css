@@ -3,6 +3,23 @@
    ======================================== */
 
 /* ========== GLOBAL RESET ========== */
+:root {
+    --navbar-height: 70px; 
+}
+
+.page-wrapper {
+    /* Mengimbangi tinggi Navbar FIXED (70px) */
+    padding-top: 70px; 
+    margin: 0;
+    padding-bottom: 0; 
+}
+
+.home-container {
+    /* Hapus padding-top dan margin-top yang tidak perlu */
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -11,8 +28,11 @@
 
 html,
 body {
+    margin: 0 !important;
+    padding: 0 !important;
     scroll-behavior: smooth;
     overflow-x: hidden;
+    scroll-behavior: smooth;
 }
 
 /* ========== LOADING SCREEN ========== */
@@ -56,6 +76,9 @@ body {
     overflow: hidden;
     padding: 80px 20px 80px;
     margin: 0;
+    padding-bottom: 100px;
+    padding-top: calc(100px + var(--navbar-height));
+    min-height: calc(100vh - var(--navbar-height)); 
 }
 
 .hero-pattern {
@@ -265,6 +288,8 @@ body {
     flex-direction: column;
     justify-content: center;
     margin: 0;
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
 }
 
 .section-header {

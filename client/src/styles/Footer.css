@@ -6,6 +6,7 @@
     --clr-text: #000;
     --clr-subtext: #888;
     --clr-heart: #ba6573;
+    --navbar-height: 70px;
     }
 
     .custom-footer {
@@ -18,13 +19,14 @@
     padding: 1.5rem 0rem;
     gap: 2rem;
     flex-wrap: wrap;
-    }
+    width: 100%;
+}
 
     .footer-col {
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    padding: 2rem;
+    padding: 0rem;
     }
 
     .footer-brand {

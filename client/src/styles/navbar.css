@@ -8,6 +8,7 @@
     width: 100%;
     z-index: 1000;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    height: 70px;
 }
 
 .logo-brand {
@@ -100,13 +101,13 @@
 .inputsearch::-webkit-search-cancel-button,
 .inputsearch::-webkit-search-results-button,
 .inputsearch::-webkit-search-results-decoration {
-  display: none;
-  -webkit-appearance: none;
+    display: none;
+    -webkit-appearance: none;
 }
 
 /* Opsional: Untuk memastikan di MS Edge versi lama jika masih ada yang pakai */
 .inputsearch::-ms-clear {
-  display: none;
-  width: 0;
-  height: 0;
+    display: none;
+    width: 0;
+    height: 0;
 }

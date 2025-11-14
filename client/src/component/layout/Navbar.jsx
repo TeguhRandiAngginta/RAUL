@@ -17,7 +17,6 @@ const Header = () => {
     const years = Array.from(new Array(30), (val, index) => currentYear - index);
 
     useEffect(() => {
-        // Ambil daftar genre saat komponen dimuat
         const fetchGenres = async () => {
             try {
                 const response = await api.get('/movies/genres');
@@ -35,22 +34,24 @@ const Header = () => {
     };
 
     const handleSearch = (e) => {
-        e.preventDefault(); // Mencegah halaman reload
+        e.preventDefault(); 
         if (input.trim()) {
-            // Navigasi ke halaman search, kirim query-nya
             navigate(`/search?query=${input.trim()}`);
-            setInput(""); // Kosongkan input setelah search
+            setInput("");
         }
     };
+    
+    // Asumsi: Ketinggian Navbar adalah 70px (didefinisikan di CSS)
 
     return (
-        <Navbar expand="lg" className="px-3 navbar" style={{ backgroundColor: "#f5e6d3" }}>
+        // Tambahkan class 'navbar-fixed' yang Anda buat di CSS
+        <Navbar expand="lg" className="px-3 navbar navbar-fixed" style={{ backgroundColor: "#f5e6d3" }}>
             <Container fluid>
                 <Navbar.Brand as={Link} to="/" className="fw-bold fs-3 logo-brand">
                     RAUL
                 </Navbar.Brand>
                 
-                {/* Search Bar dengan Form agar bisa di-Enter */}
+                {/* Search Bar */}
                 <Form onSubmit={handleSearch} className="d-flex seach-bar-container">
                     <InputGroup className="input-wrapper d-flex align-items-center">
                         <InputGroup.Text id="search-icon" className="bg-transparent border-0">
@@ -71,6 +72,7 @@ const Header = () => {
                 <Navbar.Toggle aria-controls="basic-navbar-nav" />
                 <Navbar.Collapse id="basic-navbar-nav">
                     <Nav className="ms-auto nav-links fw-bold align-items-center">
+                        
                         {/* Dropdown Genre */}
                         <Dropdown as={Nav.Item}>
                             <Dropdown.Toggle as={Nav.Link} id="genre-dropdown" className="nav-link text-dark fw-bold text-decoration-none border-0 bg-transparent">

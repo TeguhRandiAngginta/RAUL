@@ -5,7 +5,7 @@ const Footer = () => {
     return (
         <footer id="custom-footer" className="custom-footer">
             <div className="footer-col footer-brand">
-                <h3>RAUL</h3>
+                <h3 className="footer-brand-title">RAUL</h3>
                 <p>Made with <span className="heart">❤</span> by Team RAUL</p>
                 <div className="social-icons">
                     <a href="#"><img src="https://assets.codepen.io/9051928/codepen_1.png" alt="CodePen" /></a>
