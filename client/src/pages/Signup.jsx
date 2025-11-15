@@ -11,8 +11,8 @@ import Image from 'react-bootstrap/Image';
 import logo from '../assets/logo/logoWeb.png';
 import img from '../assets/logo/log1.png';
 import { useForm } from 'react-hook-form';
-import { useNavigate, useLocation } from 'react-router-dom'; // Import useNavigate dan useLocation
-import { API_BASE_URL } from '../util.js';
+import { useNavigate, useLocation } from 'react-router-dom';
+import api from '../api/api'; 
 import '../styles/style.css';
 
 export default function Signup() {
@@ -20,43 +20,39 @@ export default function Signup() {
         handleSubmit,
         register,
         formState: { errors, isSubmitting },
+        watch // <-- TAMBAHAN: untuk validasi konfirmasi password
     } = useForm();
+    
+    // Amati nilai password
+    const password = watch("password");
 
-    const navigate = useNavigate(); // Inisialisasi navigate
-    const location = useLocation(); // Inisialisasi location
+    const navigate = useNavigate();
+    const location = useLocation();
 
     const doSubmit = async values => {
         try {
-            const res = await fetch(`${API_BASE_URL}/auth/signup`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(values),
-            });
-            console.log(values);
-            const data = await res.json();
-            if (res.status === 200) {
-                toast.success('Sign Up Successful. Silakan login untuk melanjutkan', {
-                    duration: 2000,
+            const res = await api.post('/auth/signup', values);
+
+            // Sesuaikan dengan respons backend baru (201 Created)
+            if (res.status === 201) {
+                // Tampilkan pesan sukses dari server (cth: "Cek email Anda...")
+                toast.success(res.data.message, {
+                    duration: 4000, // Beri waktu lebih agar user bisa baca
                 });
                 
-                // Redirect ke halaman login setelah 1.5 detik
-                // Kirim state.from jika ada, agar setelah login bisa kembali ke halaman sebelumnya
+                // Arahkan ke halaman login
                 setTimeout(() => {
                     navigate('/signin', { 
                         state: { from: location.state?.from } 
                     });
-                }, 1500);
+                }, 2000);
             } else {
-                toast.error(data.message);
+                // Jaga-jaga jika ada status sukses lain
+                toast.error(res.data.message || 'Pendaftaran gagal.');
             }
         } catch (error) {
-            let errorMessage = 'Something went wrong';
-            if (error instanceof Error) {
-                errorMessage = error.message;
-            }
-            toast.error(errorMessage);
+            // Tangkap error dari backend (cth: email sudah ada)
+            toast.error(error.response?.data?.message || 'Terjadi kesalahan');
         }
     };
 
@@ -84,11 +80,17 @@ export default function Signup() {
                             <h2 className="mb-4 archivo title-form align-title">Daftar Akun RAUL</h2>
 
                             {/* Email Field */}
-                            <FloatingLabel controlId="floatingInput" label="Email" className="mb-3">
+                            <FloatingLabel controlId="floatingInputEmail" label="Email" className="mb-3">
                                 <Form.Control
                                     type="email"
                                     placeholder="name@example.com"
-                                    {...register('email', { required: 'Masukkan email' })}
+                                    {...register('email', { 
+                                        required: 'Masukkan email',
+                                        pattern: { // Validasi format email
+                                            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                                            message: "Email tidak valid"
+                                        }
+                                    })}
                                 />
                                 {errors.email && (
                                     <Form.Text className="text-danger">{errors.email.message}</Form.Text>
@@ -96,7 +98,7 @@ export default function Signup() {
                             </FloatingLabel>
 
                             {/* Username Field */}
-                            <FloatingLabel controlId="floatingInput" label="Nama Lengkap" className="mb-3">
+                            <FloatingLabel controlId="floatingInputUsername" label="Nama Lengkap" className="mb-3">
                                 <Form.Control
                                     type="text"
                                     placeholder="Alexandro Dronolo"
@@ -113,7 +115,10 @@ export default function Signup() {
                                     type="password"
                                     placeholder="Password"
                                     className="mb-3"
-                                    {...register('password', { required: 'Masukkan Kata Sandi' })}
+                                    {...register('password', { 
+                                        required: 'Masukkan Kata Sandi',
+                                        minLength: { value: 6, message: "Password minimal 6 karakter" }
+                                    })}
                                 />
                                 {errors.password && (
                                     <Form.Text className="text-danger">{errors.password.message}</Form.Text>
@@ -126,7 +131,11 @@ export default function Signup() {
                                     type="password"
                                     placeholder="Password"
                                     className="mb-3"
-                                    {...register('confirmPassword', { required: 'Masukkan konfirmasi kata sandi' })}
+                                    {...register('confirmPassword', { 
+                                        required: 'Masukkan konfirmasi kata sandi',
+                                        validate: value => // Validasi pencocokan
+                                            value === password || "Kata sandi tidak cocok"
+                                    })}
                                 />
                                 {errors.confirmPassword && (
                                     <Form.Text className="text-danger">
@@ -148,7 +157,7 @@ export default function Signup() {
                                     </span>
                                 }
                                 className="mb-3"
-                                {...register('agreement', { required: 'Kamu harus menyetujui kebijakan privasi' })}
+                                {...register('agreement', { required: 'Anda harus menyetujui kebijakan privasi' })}
                             />
                             {errors.agreement && (
                                 <Form.Text className="text-danger">{errors.agreement.message}</Form.Text>
