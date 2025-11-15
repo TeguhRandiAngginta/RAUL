@@ -76,7 +76,14 @@ export const signup = async (req, res, next) => {
             message: 'Pendaftaran berhasil. Silakan cek email Anda untuk verifikasi.' 
         });
     } catch (error) {
-        next({ status: 500, error });
+        // Log error asli dari sendEmail (cth: 535, 5.7.8, dll)
+        console.error("Error di dalam signup catch:", error); 
+        // Kirim pesan error yang lebih umum ke frontend
+        next({ 
+            status: 500, 
+            message: "Gagal mengirim email verifikasi.",
+            error: error // Teruskan error asli ke errorHandler
+        });
     }
 };
 

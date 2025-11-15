@@ -6,7 +6,7 @@ import {
 const router = express.Router();
 
 router.post('/signup', signup);
-router.get('/verify-email', verifyEmail);
+router.post('/verify-email', verifyEmail);
 router.post('/login', login);
 router.post('/logout', logout);
 

@@ -20,7 +20,7 @@ const transporter = nodemailer.createTransport({
 export const sendEmail = async (to, subject, html) => {
     try {
         const mailOptions = {
-            from: `"Raul Film" <${process.env.SMTP_USER}>`,
+            from: `"Raul Film" <${process.env.SMTP_FROM_EMAIL}>`,
             to: to,
             subject: subject,
             html: html,
@@ -33,6 +33,6 @@ export const sendEmail = async (to, subject, html) => {
 
     } catch (error) {
         console.error("Gagal mengirim email:", error);
-        throw new Error("Gagal mengirim email verifikasi.");
+        throw error;
     }
 };
