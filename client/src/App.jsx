@@ -29,7 +29,7 @@ export const useAuth = () => useContext(AuthContext);
 function AppContent() {
   const location = useLocation();
   const dispatch = useDispatch();
-  const hideLayoutRoutes = ['/signin', '/signup', '/forget-password', '/privacy-policy'];
+  const hideLayoutRoutes = ['/signin', '/signup', '/forget-password', '/privacy-policy', '/verify-email'];
   
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
