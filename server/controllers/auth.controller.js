@@ -129,6 +129,62 @@ export const verifyEmail = async (req, res, next) => {
     }
 };
 
+export const resendVerification = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return next({ status: 400, message: 'Email diperlukan' });
+        }
+
+        const user = await collection.findOne({ email });
+
+        // mencegah email enumeration dengan kirim respons sukses palsu jika email tidak ada.
+        if (!user) {
+            return res.status(200).json({ 
+                message: 'Jika email Anda terdaftar, email verifikasi baru telah dikirim.' 
+            });
+        }
+
+        // Cek jika user sudah verifikasi
+        if (user.isVerified) {
+            return res.status(400).json({ message: 'Email ini sudah diverifikasi. Silakan login.' });
+        }
+
+        // --- Logika Kirim Ulang Email (Copy-paste dari signup) ---
+        // 1. Buat token verifikasi baru (berlaku 1 jam)
+        const verificationToken = jwt.sign(
+            { id: user._id, purpose: 'verify-email' }, // Gunakan user._id yang ada
+            process.env.AUTH_SECRET,
+            { expiresIn: '1h' }
+        );
+
+        // 2. Buat Link Verifikasi
+        const verificationLink = `${process.env.CLIENT_URL}/verify-email?token=${verificationToken}`;
+
+        // 3. Konten Email (HTML)
+        const emailHtml = `
+            <h1>Verifikasi Ulang Akun Raul Film</h1>
+            <p>Anda meminta untuk mengirim ulang email verifikasi. Silakan klik link di bawah ini:</p>
+            <a href="${verificationLink}" style="padding: 10px 15px; background-color: #ffc107; color: #000; text-decoration: none; border-radius: 5px;">
+                Verifikasi Email Saya
+            </a>
+            <p>Link ini hanya berlaku selama 1 jam.</p>
+        `;
+
+        // 4. Kirim Email
+        await sendEmail(email, "Verifikasi Ulang Akun Raul Film Anda", emailHtml);
+        // --- Selesai Kirim Email ---
+
+        res.status(200).json({ 
+            message: 'Email verifikasi baru telah dikirim. Silakan cek inbox Anda.' 
+        });
+
+    } catch (error) {
+        console.error("Error di resendVerification:", error);
+        next({ status: 500, error });
+    }
+};
+
 export const login = async (req, res, next) => {
     try {
         const { email, password } = req.body;
