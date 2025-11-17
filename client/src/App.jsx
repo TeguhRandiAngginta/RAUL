@@ -20,6 +20,7 @@ import MovieList from './pages/MovieList';
 import SearchResult from './pages/SearchResult';
 import MyReviews from './pages/MyReviews';
 import Watchlist from './pages/Watchlist';
+import VerifyEmail from './pages/VerifyEmail';
 
 const AuthContext = createContext();
 
@@ -28,7 +29,7 @@ export const useAuth = () => useContext(AuthContext);
 function AppContent() {
   const location = useLocation();
   const dispatch = useDispatch();
-  const hideLayoutRoutes = ['/signin', '/signup', '/forget-password', '/privacy-policy'];
+  const hideLayoutRoutes = ['/signin', '/signup', '/forget-password', '/privacy-policy', '/verify-email'];
   
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -104,6 +105,7 @@ function AppContent() {
           <Route path="/search" element={<SearchResult />} />
           <Route path="/my-reviews" element={<MyReviews />} />
           <Route path="/watchlist" element={<Watchlist />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
         </Routes>
       </main>
       {!hideLayoutRoutes.includes(location.pathname) && <Footer />}
