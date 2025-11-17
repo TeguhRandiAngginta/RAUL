@@ -2,11 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
-import { Container, Spinner, Alert, Button, Card, Row, Col, Image } from 'react-bootstrap';
+import { 
+    Container, Spinner, Alert, Button, Card, Row, Col, Image, 
+    Modal, Form, FloatingLabel // <-- TAMBAHKAN IMPORT
+} from 'react-bootstrap';
 import api from '../api/api';
 import logo from '../assets/logo/logoWeb.png';
 import img from '../assets/logo/log1.png';
-import '../styles/style.css'; // Pastikan style.css di-import
+import '../styles/style.css';
+import toast from 'react-hot-toast'; // <-- TAMBAHKAN IMPORT
 
 function VerifyEmail() {
     const [searchParams] = useSearchParams();
@@ -15,6 +19,12 @@ function VerifyEmail() {
     const navigate = useNavigate();
 
     const token = searchParams.get('token');
+
+    // --- State baru untuk Modal Kirim Ulang ---
+    const [showResendModal, setShowResendModal] = useState(false);
+    const [email, setEmail] = useState(''); // Email untuk form kirim ulang
+    const [isResending, setIsResending] = useState(false);
+    // -----------------------------------------
 
     useEffect(() => {
         if (!token) {
@@ -42,6 +52,33 @@ function VerifyEmail() {
         verifyToken();
         
     }, [token, navigate]);
+
+    // --- Fungsi baru untuk Modal ---
+    const handleCloseResendModal = () => {
+        setShowResendModal(false);
+        setEmail(''); // Kosongkan email saat modal ditutup
+    };
+    const handleShowResendModal = () => setShowResendModal(true);
+
+    const handleResendSubmit = async (e) => {
+        e.preventDefault();
+        if (!email) {
+            return toast.error("Silakan masukkan email Anda.");
+        }
+        setIsResending(true);
+        try {
+            // Panggil API backend yang sudah kita buat
+            const res = await api.post('/auth/resend-verification', { email });
+            handleCloseResendModal();
+            toast.success(res.data.message); // Tampilkan pesan (cth: "Email baru telah dikirim")
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Gagal mengirim email.");
+        } finally {
+            setIsResending(false);
+        }
+    };
+    // -----------------------------
+
 
     // Fungsi untuk menampilkan konten berdasarkan status
     const renderStatus = () => {
@@ -73,9 +110,11 @@ function VerifyEmail() {
                     <Alert.Heading>Verifikasi Gagal!</Alert.Heading>
                     <p>{message}</p>
                     <hr />
-                    <Button as={Link} to="/signup" variant="danger">
-                        Coba Daftar Lagi
+                    {/* --- PERUBAHAN DI SINI --- */}
+                    <Button variant="danger" onClick={handleShowResendModal}>
+                        Kirim Ulang Email Verifikasi
                     </Button>
+                    {/* --- AKHIR PERUBAHAN --- */}
                 </Alert>
             );
         }
@@ -105,6 +144,42 @@ function VerifyEmail() {
                     </Col>
                 </Row>
             </Card>
+
+            {/* --- MODAL BARU UNTUK KIRIM ULANG --- */}
+            <Modal show={showResendModal} onHide={handleCloseResendModal} centered data-bs-theme="dark">
+                <Form onSubmit={handleResendSubmit}>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Kirim Ulang Email Verifikasi</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <p className="text-muted">Masukkan email yang Anda gunakan untuk mendaftar. Kami akan mengirimkan link verifikasi baru.</p>
+                        <FloatingLabel controlId="floatingEmail" label="Email" className="mb-3">
+                            <Form.Control
+                                type="email"
+                                placeholder="name@example.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                            />
+                        </FloatingLabel>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary" onClick={handleCloseResendModal}>
+                            Batal
+                        </Button>
+                        <Button variant="warning" type="submit" disabled={isResending}>
+                            {isResending ? (
+                                <>
+                                    <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
+                                    {' '}Mengirim...
+                                </>
+                            ) : (
+                                'Kirim'
+                            )}
+                        </Button>
+                    </Modal.Footer>
+                </Form>
+            </Modal>
         </Container>
     );
 }
