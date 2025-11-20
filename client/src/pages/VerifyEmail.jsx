@@ -1,20 +1,18 @@
-// client/src/pages/VerifyEmail.jsx
-
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { 
     Container, Spinner, Alert, Button, Card, Row, Col, Image, 
-    Modal, Form, FloatingLabel // <-- TAMBAHKAN IMPORT
+    Modal, Form, FloatingLabel
 } from 'react-bootstrap';
 import api from '../api/api';
 import logo from '../assets/logo/logoWeb.png';
 import img from '../assets/logo/log1.png';
 import '../styles/style.css';
-import toast from 'react-hot-toast'; // <-- TAMBAHKAN IMPORT
+import toast from 'react-hot-toast';
 
 function VerifyEmail() {
     const [searchParams] = useSearchParams();
-    const [status, setStatus] = useState('verifying'); // 'verifying', 'success', 'error'
+    const [status, setStatus] = useState('verifying');
     const [message, setMessage] = useState('Sedang memverifikasi email Anda...');
     const navigate = useNavigate();
 
@@ -22,7 +20,7 @@ function VerifyEmail() {
 
     // --- State baru untuk Modal Kirim Ulang ---
     const [showResendModal, setShowResendModal] = useState(false);
-    const [email, setEmail] = useState(''); // Email untuk form kirim ulang
+    const [email, setEmail] = useState(''); 
     const [isResending, setIsResending] = useState(false);
     // -----------------------------------------
 
@@ -67,12 +65,13 @@ function VerifyEmail() {
         }
         setIsResending(true);
         try {
-            // Panggil API backend yang sudah kita buat
+            // Panggil API backend
             const res = await api.post('/auth/resend-verification', { email });
             handleCloseResendModal();
-            toast.success(res.data.message); // Tampilkan pesan (cth: "Email baru telah dikirim")
+            toast.success(res.data.message);
         } catch (error) {
-            toast.error(error.response?.data?.message || "Gagal mengirim email.");
+            console.error("Resend verification failed:", error);
+            toast.error("Terjadi kesalahan pada server. Coba lagi nanti.");
         } finally {
             setIsResending(false);
         }
