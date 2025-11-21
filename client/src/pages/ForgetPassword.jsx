@@ -11,7 +11,8 @@ import Image from 'react-bootstrap/Image';
 import logo from '../assets/logo/logoWeb.png';
 import img from '../assets/logo/log1.png';
 import { useForm } from 'react-hook-form';
-import '../styles/style.css'; // Import external CSS
+import '../styles/style.css';
+import api from '../api/api';
 
 export default function ForgetPassword() {
     const {
@@ -20,8 +21,16 @@ export default function ForgetPassword() {
         formState: { errors, isSubmitting },
     } = useForm();
 
-    const doSubmit = async () => {
-        toast.success('Check Kotak Masuk Emailmu ');
+    const doSubmit = async (data) => {
+        try {
+            const res = await api.post('/auth/forgot-password', { email: data.email });
+            
+            // Tampilkan pesan sukses generik dari backend
+            toast.success(res.data.message, { duration: 5000 });
+            
+        } catch (error) {
+            toast.error("Terjadi kesalahan. Silakan coba lagi.");
+        }
     };
 
     return (
