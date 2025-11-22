@@ -219,3 +219,92 @@ export const logout = async (req, res, next) => {
         next({ status: 500, error });
     }
 };
+
+// Request Link Reset
+export const forgotPassword = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+        const user = await collection.findOne({ email });
+
+        // Keamanan: Jika user ada dan sudah verifikasi, baru proses
+        if (user && user.isVerified) {
+            
+            // 1. Buat token reset
+            const resetToken = jwt.sign(
+                { id: user._id, purpose: 'reset-password' }, // purpose berbeda dari verify-email
+                process.env.AUTH_SECRET,
+                { expiresIn: '5m' } // Waktu singkat untuk keamanan
+            );
+
+            // 2. Link Frontend
+            const resetLink = `${process.env.CLIENT_URL}/reset-password?token=${resetToken}`;
+
+            // 3. Konten Email
+            const emailHtml = `
+                <h1>Reset Password</h1>
+                <p>Seseorang meminta untuk mengatur ulang kata sandi akun Raul Film Anda.</p>
+                <p>Jika ini bukan Anda, abaikan email ini.</p>
+                <br/>
+                <a href="${resetLink}" style="padding: 10px 15px; background-color: #dc3545; color: #fff; text-decoration: none; border-radius: 5px;">
+                    Atur Ulang Kata Sandi
+                </a>
+                <p>Link ini berlaku selama 5 menit.</p>
+            `;
+
+            // 4. Kirim Email
+            await sendEmail(email, "Reset Password - Raul Film", emailHtml);
+        }
+
+        // Keamanan: Selalu kirim respons SUKSES GENERIK
+        res.status(200).json({
+            message: 'Jika email terdaftar dan terverifikasi, kami telah mengirimkan link reset password.'
+        });
+
+    } catch (error) {
+        console.error("Error forgotPassword:", error);
+        next({ status: 500, error });
+    }
+};
+
+// Set Password Baru
+export const resetPassword = async (req, res, next) => {
+    try {
+        const { token, newPassword } = req.body;
+
+        if (!token || !newPassword) {
+            return next({ status: 400, message: 'Token dan password baru diperlukan.' });
+        }
+
+        // 1. Verifikasi Token
+        let payload;
+        try {
+            payload = jwt.verify(token, process.env.AUTH_SECRET);
+        } catch (err) {
+            return next({ status: 401, message: 'Link reset tidak valid atau sudah kedaluwarsa.' });
+        }
+
+        if (payload.purpose !== 'reset-password') {
+            return next({ status: 401, message: 'Token tidak valid.' });
+        }
+
+        // 2. Hash Password Baru
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // 3. Update Password di Database
+        await collection.updateOne(
+            { _id: new ObjectId(payload.id) },
+            { 
+                $set: { 
+                    password: hashedPassword,
+                    updatedAt: new Date().toISOString() 
+                } 
+            }
+        );
+
+        res.status(200).json({ message: 'Kata sandi berhasil diubah. Silakan login dengan kata sandi baru.' });
+
+    } catch (error) {
+        console.error("Error resetPassword:", error);
+        next({ status: 500, error });
+    }
+};
