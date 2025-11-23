@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Navbar, Nav, Container, Dropdown, Form, InputGroup } from "react-bootstrap";
+import { Navbar, Nav, Container, Dropdown, Form, InputGroup, Button } from "react-bootstrap";
 import { FaSearch } from "react-icons/fa";
 import { useAuth } from '../../App';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -12,6 +12,8 @@ const Header = () => {
     const [genres, setGenres] = useState([]);
     const [showGenreDropdown, setShowGenreDropdown] = useState(false);
     const [showYearDropdown, setShowYearDropdown] = useState(false);
+    const [isAdult, setIsAdult] = useState(false); // <-- STATE BARU
+
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
@@ -32,16 +34,27 @@ const Header = () => {
     }, []);
 
     const handleLogout = () => {
+        setIsAdult(false); // Reset filter saat logout
         logout();
         navigate('/');
     };
 
+    const toggleAdultFilter = () => {
+        setIsAdult(!isAdult);
+    };
+
     const handleSearch = (e) => {
-        e.preventDefault(); 
+        e.preventDefault();
         if (input.trim()) {
-            navigate(`/search?query=${input.trim()}`);
+            // Sertakan parameter isAdult
+            navigate(`/search?query=${input.trim()}&isAdult=${isAdult}`);
             setInput("");
         }
+    };
+
+    // Helper untuk membuat link yang konsisten membawa state 18+
+    const getLinkWithFilter = (path) => {
+        return `${path}&isAdult=${isAdult}`;
     };
 
     // Kelompokkan genre menjadi 3 kolom
@@ -51,7 +64,6 @@ const Header = () => {
         genres.slice(Math.ceil(genres.length / 3) * 2)
     ];
 
-    // Kelompokkan tahun menjadi 3 kolom
     const yearColumns = [
         years.slice(0, 10),
         years.slice(10, 20),
@@ -61,7 +73,6 @@ const Header = () => {
     return (
         <Navbar expand="lg" className="navbar navbar-fixed">
             <Container fluid>
-                {/* Logo dan Brand */}
                 <Navbar.Brand as={Link} to="/" className="navbar-brand">
                     <img src={logoWeb} alt="RAUL Logo" className="logo-icon" />
                     <span className="logo-brand">RAUL</span>
@@ -85,7 +96,7 @@ const Header = () => {
                                     {column.map((genre) => (
                                         <Link
                                             key={genre.id}
-                                            to={`/movies?genre=${genre.id}`}
+                                            to={getLinkWithFilter(`/movies?genre=${genre.id}`)}
                                             className="mega-dropdown-item"
                                             onClick={() => setShowGenreDropdown(false)}
                                         >
@@ -116,7 +127,7 @@ const Header = () => {
                                     {column.map((year) => (
                                         <Link
                                             key={year}
-                                            to={`/movies?year=${year}`}
+                                            to={getLinkWithFilter(`/movies?year=${year}`)}
                                             className="mega-dropdown-item"
                                             onClick={() => setShowYearDropdown(false)}
                                         >
@@ -129,26 +140,39 @@ const Header = () => {
                     </div>
                 </div>
                 
-                {/* Search Bar */}
-                <Form onSubmit={handleSearch} className="seach-bar-container">
-                    <InputGroup className="input-wrapper">
-                        <InputGroup.Text className="bg-transparent border-0">
-                            <FaSearch />
-                        </InputGroup.Text>
-                        <Form.Control
-                            type="search"
-                            placeholder="Cari film, judul, atau penulis..."
-                            className="inputsearch border-0 bg-transparent"
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            aria-label="Search"
-                        />
-                    </InputGroup>
-                </Form>
+                {/* Search Bar & 18+ Toggle */}
+                <div className="d-flex align-items-center ms-3 flex-grow-1 justify-content-end" style={{ maxWidth: '600px' }}>
+                    <Form onSubmit={handleSearch} className="seach-bar-container w-100 me-2">
+                        <InputGroup className="input-wrapper">
+                            <InputGroup.Text className="bg-transparent border-0">
+                                <FaSearch />
+                            </InputGroup.Text>
+                            <Form.Control
+                                type="search"
+                                placeholder="Cari film atau aktor..."
+                                className="inputsearch border-0 bg-transparent"
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                aria-label="Search"
+                            />
+                        </InputGroup>
+                    </Form>
+
+                    <Button 
+                        variant={isAdult ? "danger" : "outline-secondary"} 
+                        size="sm" 
+                        className="fw-bold text-nowrap"
+                        onClick={toggleAdultFilter}
+                        title="Filter Konten Dewasa"
+                        style={{ borderRadius: '20px', height: '52px', width: '60px' }}
+                    >
+                        {isAdult ? "18+" : "All"}
+                    </Button>
+                </div>
                 
                 <Navbar.Toggle aria-controls="basic-navbar-nav" />
                 <Navbar.Collapse id="basic-navbar-nav">
-                    <div className="auth-buttons-container">
+                    <div className="auth-buttons-container ms-auto">
                         {user ? (
                             <Dropdown align="end">
                                 <Dropdown.Toggle 
