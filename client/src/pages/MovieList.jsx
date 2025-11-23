@@ -1,29 +1,47 @@
+// client/src/pages/MovieList.jsx
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { Container, Row, Col, Card, Button, Spinner } from "react-bootstrap";
-import { Link, useSearchParams } from "react-router-dom";
-import { StarFill, ArrowLeftCircle, ArrowRightCircle } from "react-bootstrap-icons";
+import { Container, Row, Col, Spinner, Button } from "react-bootstrap";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { ArrowLeftCircle, ArrowRightCircle, ArrowLeft, Film } from "react-bootstrap-icons";
+import { fetchPopularMovies, discoverMovies } from "../api/movieService";
+import MovieCard from "../component/grid/MovieCard";
+import '../styles/movieList.css';
 
 export default function MovieList() {
     const [searchParams, setSearchParams] = useSearchParams();
     const [movies, setMovies] = useState([]);
     const [loading, setLoading] = useState(true);
     const [totalPages, setTotalPages] = useState(1);
+    const navigate = useNavigate();
 
-    // Ambil halaman dari URL, default ke 1 jika tidak ada
+    // Ambil parameter dari URL
     const page = parseInt(searchParams.get("page")) || 1;
+    const genre = searchParams.get("genre");
+    const year = searchParams.get("year");
 
     useEffect(() => {
         const fetchMovies = async () => {
             setLoading(true);
             try {
-                const res = await axios.get(
-                    `https://api.themoviedb.org/3/movie/popular?api_key=15050283b30a09e0018841fd5769b73b&language=id-ID&page=${page}`
-                );
-                setMovies(res.data.results);
-                setTotalPages(res.data.total_pages);
+                let data;
+                
+                // Jika ada filter genre atau tahun, gunakan discover
+                if (genre || year) {
+                    const params = { page };
+                    if (genre) params.genre = genre;
+                    if (year) params.year = year;
+                    
+                    data = await discoverMovies(params);
+                } else {
+                    // Jika tidak ada filter, ambil film populer
+                    data = await fetchPopularMovies(page);
+                }
+                
+                setMovies(data.results || []);
+                setTotalPages(Math.min(data.total_pages || 1, 500)); // TMDB limit 500 pages
             } catch (error) {
-                console.error("Gagal ambil data TMDB:", error);
+                console.error("Gagal ambil data film:", error);
+                setMovies([]);
             } finally {
                 setLoading(false);
                 window.scrollTo({ top: 0, behavior: "smooth" });
@@ -31,110 +49,131 @@ export default function MovieList() {
         };
 
         fetchMovies();
-    }, [page]);
+    }, [page, genre, year]);
 
     const handlePageChange = (newPage) => {
-        setSearchParams({ page: newPage.toString() });
+        const params = { page: newPage.toString() };
+        if (genre) params.genre = genre;
+        if (year) params.year = year;
+        setSearchParams(params);
+    };
+
+    // Determine title based on filters
+    const getPageTitle = () => {
+        if (genre && year) return `Film Genre & Tahun ${year}`;
+        if (genre) return `Film Berdasarkan Genre`;
+        if (year) return `Film Tahun ${year}`;
+        return "Film Populer";
     };
 
     if (loading) {
         return (
-            <div className="text-center mt-5 text-secondary">
-                <Spinner animation="border" variant="warning" />
-                <p className="mt-3">Memuat daftar film...</p>
+            <div className="list-loading-container">
+                <div className="list-loading-content">
+                    <Spinner animation="border" variant="warning" className="list-spinner" />
+                    <p className="list-loading-text">Memuat daftar film...</p>
+                </div>
             </div>
         );
     }
 
     return (
-        <div style={{ backgroundColor: "#FAF7F3", minHeight: "100vh", padding: "50px 0" }}>
-            <Container>
-                <h1 className="fw-bold mb-4" style={{ color: "#D9A299" }}>
-                    Semua Film Populer 🎞️
-                </h1>
+        <div className="movie-list-page">
+            {/* Decorative Background Pattern */}
+            <div className="list-pattern"></div>
+            
+            {/* Decorative Elements */}
+            <div className="list-decoration">
+                <div className="list-deco-circle list-deco-1"></div>
+                <div className="list-deco-circle list-deco-2"></div>
+                <div className="list-deco-circle list-deco-3"></div>
+            </div>
 
-                <Row>
-                    {movies.map((movie) => (
-                        <Col key={movie.id} xs={12} sm={6} md={4} lg={3} className="mb-4">
-                            <Card
-                                className="h-100 shadow border-0"
-                                style={{ backgroundColor: "#F0E4D3", color: "#1a1a1a" }}
-                            >
-                                <Card.Img
-                                    variant="top"
-                                    src={
-                                        movie.poster_path
-                                            ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-                                            : "https://via.placeholder.com/500x750?text=No+Image"
-                                    }
-                                    style={{ height: "350px", objectFit: "cover" }}
-                                    alt={movie.title}
-                                />
-                                <Card.Body className="d-flex flex-column">
-                                    <Card.Title className="text-truncate fw-bold mb-1">{movie.title}</Card.Title>
-                                    <Card.Text className="mb-2">
-                                        <small className="text-muted">{movie.release_date?.slice(0, 4)}</small>
-                                    </Card.Text>
-                                    <div className="d-flex align-items-center mb-3">
-                                        <StarFill color="#ffc107" className="me-1" />
-                                        <span className="fw-bold me-2">{(movie.vote_average / 2).toFixed(1)}</span>
-                                        <small className="text-muted">({movie.vote_count})</small>
-                                    </div>
-
-                                    <Link to={`/movie/${movie.id}`} className="mt-auto">
-                                        <Button
-                                            variant="dark"
-                                            className="w-100 fw-bold"
-                                            style={{ backgroundColor: "#D9A299", border: "none" }}
-                                        >
-                                            Detail Film
-                                        </Button>
-                                    </Link>
-                                </Card.Body>
-                            </Card>
-                        </Col>
-                    ))}
-                </Row>
-
-                {/* Navigasi Panah */}
-                <div className="d-flex justify-content-center align-items-center mt-4 gap-3">
-                    {/* Panah kiri */}
-                    <Button
-                        variant="light"
-                        onClick={() => handlePageChange(page - 1)}
-                        disabled={page === 1}
-                        style={{
-                            borderRadius: "50%",
-                            width: "50px",
-                            height: "50px",
-                            backgroundColor: page === 1 ? "#ddd" : "#D9A299",
-                            border: "none",
-                        }}
+            <Container className="list-container">
+                {/* Header Section */}
+                <div className="list-header">
+                    <button 
+                        className="list-back-btn"
+                        onClick={() => navigate(-1)}
                     >
-                        <ArrowLeftCircle size={28} color="#fff" />
-                    </Button>
+                        <ArrowLeft size={20} />
+                        <span>Kembali</span>
+                    </button>
+                    
+                    <div className="list-title-wrapper">
+                        <div className="list-icon-wrapper">
+                            <Film size={32} />
+                        </div>
+                        <div className="list-title-content">
+                            <h1 className="list-title">{getPageTitle()}</h1>
+                            <p className="list-subtitle">
+                                {movies.length > 0 && `${movies.length} film tersedia`}
+                            </p>
+                        </div>
+                    </div>
 
-                    <span className="fw-bold" style={{ color: "#D9A299" }}>
-                        Halaman {page} / {totalPages > 500 ? 500 : totalPages}
-                    </span>
-
-                    {/* Panah kanan */}
-                    <Button
-                        variant="light"
-                        onClick={() => handlePageChange(page + 1)}
-                        disabled={page === totalPages || page >= 500}
-                        style={{
-                            borderRadius: "50%",
-                            width: "50px",
-                            height: "50px",
-                            backgroundColor:
-                                page === totalPages || page >= 500 ? "#ddd" : "#D9A299",
-                            border: "none",
-                        }}
-                    >
-                        <ArrowRightCircle size={28} color="#fff" />
-                    </Button>
+                    {movies.length > 0 && (
+                        <div className="list-info-badge">
+                            <span className="list-page-info">
+                                Halaman <strong>{page}</strong> dari <strong>{totalPages}</strong>
+                            </span>
+                        </div>
+                    )}
                 </div>
+
+                {/* Content Section */}
+                {movies.length === 0 ? (
+                    <div className="list-empty-state">
+                        <div className="list-empty-icon">🎬</div>
+                        <h3 className="list-empty-title">Tidak Ada Film</h3>
+                        <p className="list-empty-text">
+                            Tidak ada film ditemukan dengan filter yang dipilih
+                        </p>
+                        <button 
+                            className="list-empty-btn"
+                            onClick={() => navigate('/')}
+                        >
+                            Kembali ke Beranda
+                        </button>
+                    </div>
+                ) : (
+                    <>
+                        <div className="list-results-grid">
+                            <Row>
+                                {movies.map((movie) => (
+                                    <Col key={movie.id} xs={12} sm={6} md={4} lg={3} xl={2.4} className="mb-4">
+                                        <MovieCard movie={movie} />
+                                    </Col>
+                                ))}
+                            </Row>
+                        </div>
+
+                        {/* Pagination Navigation */}
+                        <div className="list-pagination">
+                            <Button
+                                className="list-nav-btn list-nav-prev"
+                                onClick={() => handlePageChange(page - 1)}
+                                disabled={page === 1}
+                            >
+                                <ArrowLeftCircle size={28} />
+                            </Button>
+
+                            <div className="list-page-indicator">
+                                <span className="list-page-current">{page}</span>
+                                <span className="list-page-divider">/</span>
+                                <span className="list-page-total">{totalPages}</span>
+                            </div>
+
+                            <Button
+                                className="list-nav-btn list-nav-next"
+                                onClick={() => handlePageChange(page + 1)}
+                                disabled={page === totalPages}
+                            >
+                                <ArrowRightCircle size={28} />
+                            </Button>
+                        </div>
+                    </>
+                )}
             </Container>
         </div>
     );
