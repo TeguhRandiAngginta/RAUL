@@ -40,8 +40,7 @@ const Header = () => {
             setInput("");
         }
     };
-    
-    // Asumsi: Ketinggian Navbar adalah 70px (didefinisikan di CSS)
+
 
     return (
         // Tambahkan class 'navbar-fixed' yang Anda buat di CSS
