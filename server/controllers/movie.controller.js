@@ -3,63 +3,75 @@ import axios from 'axios';
 const BASE_URL = "https://api.themoviedb.org/3";
 const API_KEY = process.env.TMDB_API_KEY;
 
-// HELPER: parameter standar untuk setiap panggilan TMDB
+// Parameter standard untuk TMDB requests
 const tmdbParams = (params = {}) => {
     return {
         params: {
             api_key: API_KEY,
-            language: 'id-ID',
-            ...params // Gabungkan dengan parameter tambahan
+            language: 'id-ID', // Default bahasa Indonesia
+            include_adult: false, // Default aman
+            ...params // Timpa dengan parameter dinamis
         }
     };
 };
 
-// Fungsi untuk mengambil film populer
+// 1. Mengambil Film Populer
 export const getPopularMovies = async (req, res, next) => {
     try {
         const page = req.query.page || 1; 
-        
-        const response = await axios.get(`${BASE_URL}/movie/popular`, {
-            params: {
-                api_key: API_KEY,
-                language: 'id-ID',
-                page: page,
-            },
-        });
-        
+        // Gunakan helper
+        const response = await axios.get(`${BASE_URL}/movie/popular`, tmdbParams({ page }));
         res.status(200).json(response.data);
     } catch (error) {
         next({ status: error.response?.status || 500, message: 'Gagal mengambil data dari TMDB' });
     }
 };
 
-// Fungsi untuk mengambil detail satu film
+// 2. Mengambil Detail Film
 export const getMovieDetails = async (req, res, next) => {
     try {
-        const { id } = req.params; // Ambil ID film dari parameter URL
+        const { id } = req.params;
+
+        // A. Coba ambil data bahasa Indonesia
+        const response = await axios.get(
+            `${BASE_URL}/movie/${id}`, 
+            tmdbParams({ append_to_response: 'credits,videos' })
+        );
+
+        let movieData = response.data;
+
+        // B. LOGIKA FALLBACK: Jika overview kosong, ambil data bahasa Inggris
+        if (!movieData.overview || movieData.overview.trim() === "") {
+            try {
+                const englishResponse = await axios.get(`${BASE_URL}/movie/${id}`, {
+                    params: { api_key: API_KEY, language: 'en-US' } // Paksa bahasa Inggris
+                });
+                
+                // Isi overview yang kosong dengan bahasa Inggris
+                movieData.overview = englishResponse.data.overview;
+                // Opsional: Isi tagline juga jika kosong
+                if (!movieData.tagline) movieData.tagline = englishResponse.data.tagline;
+                
+            } catch (err) {
+                console.log("Gagal mengambil fallback bahasa Inggris", err.message);
+            }
+        }
         
-        const response = await axios.get(`${BASE_URL}/movie/${id}`, {
-            params: {
-                api_key: API_KEY,
-                language: 'id-ID',
-                append_to_response: 'credits,videos'
-            },
-        });
-        
-        res.status(200).json(response.data);
+        res.status(200).json(movieData);
     } catch (error) {
         next({ status: error.response?.status || 500, message: 'Gagal mengambil data dari TMDB' });
     }
 };
 
+// 3. Discover Movies 
 export const discoverMovies = async (req, res, next) => {
     try {
-        const { page, genre, year } = req.query;
+        const { page, genre, year, isAdult } = req.query;
         
-        // Siapkan parameter filter
         let filterParams = { 
             page: page || 1,
-            sort_by: 'popularity.desc' // Selalu urutkan berdasarkan popularitas
+            sort_by: 'popularity.desc',
+            include_adult: isAdult === 'true' // Cek string 'true' dari frontend
         };
         
         if (genre) filterParams.with_genres = genre;
@@ -73,31 +85,84 @@ export const discoverMovies = async (req, res, next) => {
     }
 };
 
+// 4. Search Movies
+export const searchMovies = async (req, res, next) => {
+    try {
+        const { query, page, isAdult } = req.query;
+        
+        if (!query) {
+            return next({ status: 400, message: 'Query pencarian diperlukan' });
+        }
 
+        const sanitizedQuery = query.replace(/[<>]/g, '');
+        const currentPage = page || 1;
+        const includeAdult = isAdult === 'true';
+
+        // Langkah 1: Cari Film Berdasarkan JUDUL
+        const moviesByTitlePromise = axios.get(`${BASE_URL}/search/movie`, tmdbParams({ 
+            query: sanitizedQuery, 
+            page: currentPage,
+            include_adult: includeAdult 
+        }));
+
+        // Langkah 2: Cari Orang (Aktor) untuk mendapatkan ID-nya
+        const personSearchPromise = axios.get(`${BASE_URL}/search/person`, {
+            params: {
+                api_key: API_KEY,
+                query: sanitizedQuery,
+                include_adult: includeAdult
+            }
+        });
+
+        // Jalankan kedua request awal secara paralel
+        const [titleRes, personRes] = await Promise.all([moviesByTitlePromise, personSearchPromise]);
+
+        let moviesByActor = [];
+        let foundActorName = null;
+
+        // Langkah 3: Jika aktor ditemukan, cari film berdasarkan ID aktor tersebut
+        if (personRes.data.results.length > 0) {
+            // Ambil orang pertama (paling populer/relevan)
+            const actor = personRes.data.results[0];
+            foundActorName = actor.name; // Simpan nama aktor untuk ditampilkan di frontend
+
+            const moviesByActorRes = await axios.get(`${BASE_URL}/discover/movie`, tmdbParams({
+                with_cast: actor.id,
+                page: currentPage,
+                sort_by: 'popularity.desc',
+                include_adult: includeAdult
+            }));
+
+            moviesByActor = moviesByActorRes.data.results;
+        }
+
+        // Langkah 4: Kirim Respons Terpisah
+        res.status(200).json({
+            // Metadata halaman (mengambil dari hasil pencarian judul)
+            page: parseInt(currentPage),
+            total_pages: titleRes.data.total_pages,
+            
+            // BAGIAN 1: Hasil berdasarkan Judul Film
+            resultsByTitle: titleRes.data.results,
+
+            // BAGIAN 2: Hasil berdasarkan Nama Aktor
+            resultsByActor: moviesByActor,
+            
+            // Info tambahan untuk Frontend: Nama aktor yang ditemukan (misal user cari "tom", ketemu "Tom Cruise")
+            actorName: foundActorName 
+        });
+
+    } catch (error) {
+        console.error("Search Error:", error);
+        next({ status: error.response?.status || 500, message: 'Gagal mencari film' });
+    }
+};
+
+// 6. Get Genres
 export const getGenres = async (req, res, next) => {
     try {
         const response = await axios.get(`${BASE_URL}/genre/movie/list`, tmdbParams());
         res.status(200).json(response.data.genres); 
-    } catch (error) {
-        next({ status: error.response?.status || 500, message: 'Gagal mengambil data dari TMDB' });
-    }
-};
-
-
-export const searchMovies = async (req, res, next) => {
-    try {
-        const { query, page } = req.query;
-
-        if (!query) {
-            return next({ status: 400, message: 'Query pencarian "query" diperlukan' });
-        }
-        const sanitizedQuery = query.replace(/[<>]/g, '');
-
-        const response = await axios.get(
-            `${BASE_URL}/search/movie`, 
-            tmdbParams({ query: sanitizedQuery, page: page || 1 }) 
-        );
-        res.status(200).json(response.data);
     } catch (error) {
         next({ status: error.response?.status || 500, message: 'Gagal mengambil data dari TMDB' });
     }
