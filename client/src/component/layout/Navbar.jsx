@@ -4,11 +4,14 @@ import { FaSearch } from "react-icons/fa";
 import { useAuth } from '../../App';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import api from '../../api/api';
+import logoWeb from '../../assets/logo/logoWeb.png';
 import '../../styles/navbar.css';
 
 const Header = () => {
     const [input, setInput] = useState("");
     const [genres, setGenres] = useState([]);
+    const [showGenreDropdown, setShowGenreDropdown] = useState(false);
+    const [showYearDropdown, setShowYearDropdown] = useState(false);
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
@@ -41,26 +44,101 @@ const Header = () => {
         }
     };
 
+    // Kelompokkan genre menjadi 3 kolom
+    const genreColumns = [
+        genres.slice(0, Math.ceil(genres.length / 3)),
+        genres.slice(Math.ceil(genres.length / 3), Math.ceil(genres.length / 3) * 2),
+        genres.slice(Math.ceil(genres.length / 3) * 2)
+    ];
+
+    // Kelompokkan tahun menjadi 3 kolom
+    const yearColumns = [
+        years.slice(0, 10),
+        years.slice(10, 20),
+        years.slice(20)
+    ];
 
     return (
-        // Tambahkan class 'navbar-fixed' yang Anda buat di CSS
-        <Navbar expand="lg" className="px-3 navbar navbar-fixed" style={{ backgroundColor: "#f5e6d3" }}>
+        <Navbar expand="lg" className="navbar navbar-fixed">
             <Container fluid>
-                <Navbar.Brand as={Link} to="/" className="fw-bold fs-3 logo-brand">
-                    RAUL
+                {/* Logo dan Brand */}
+                <Navbar.Brand as={Link} to="/" className="navbar-brand">
+                    <img src={logoWeb} alt="RAUL Logo" className="logo-icon" />
+                    <span className="logo-brand">RAUL</span>
                 </Navbar.Brand>
+
+                {/* Dropdown Genre */}
+                <div 
+                    className="dropdown-container d-none d-lg-block"
+                    onMouseEnter={() => setShowGenreDropdown(true)}
+                    onMouseLeave={() => setShowGenreDropdown(false)}
+                >
+                    <button className="kategori-btn">
+                        <span>☰</span> Genre
+                        <span className={`dropdown-icon ${showGenreDropdown ? 'active' : ''}`}>▼</span>
+                    </button>
+                    
+                    <div className={`mega-dropdown ${showGenreDropdown ? 'show' : ''}`}>
+                        <div className="dropdown-grid">
+                            {genreColumns.map((column, colIndex) => (
+                                <div key={colIndex} className="dropdown-column">
+                                    {column.map((genre) => (
+                                        <Link
+                                            key={genre.id}
+                                            to={`/movies?genre=${genre.id}`}
+                                            className="mega-dropdown-item"
+                                            onClick={() => setShowGenreDropdown(false)}
+                                        >
+                                            {genre.name}
+                                        </Link>
+                                    ))}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Dropdown Tahun */}
+                <div 
+                    className="dropdown-container d-none d-lg-block"
+                    onMouseEnter={() => setShowYearDropdown(true)}
+                    onMouseLeave={() => setShowYearDropdown(false)}
+                >
+                    <button className="kategori-btn">
+                        📅 Tahun
+                        <span className={`dropdown-icon ${showYearDropdown ? 'active' : ''}`}>▼</span>
+                    </button>
+                    
+                    <div className={`mega-dropdown mega-dropdown-year ${showYearDropdown ? 'show' : ''}`}>
+                        <div className="dropdown-grid">
+                            {yearColumns.map((column, colIndex) => (
+                                <div key={colIndex} className="dropdown-column">
+                                    {column.map((year) => (
+                                        <Link
+                                            key={year}
+                                            to={`/movies?year=${year}`}
+                                            className="mega-dropdown-item"
+                                            onClick={() => setShowYearDropdown(false)}
+                                        >
+                                            {year}
+                                        </Link>
+                                    ))}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
                 
                 {/* Search Bar */}
-                <Form onSubmit={handleSearch} className="d-flex seach-bar-container">
-                    <InputGroup className="input-wrapper d-flex align-items-center">
-                        <InputGroup.Text id="search-icon" className="bg-transparent border-0">
+                <Form onSubmit={handleSearch} className="seach-bar-container">
+                    <InputGroup className="input-wrapper">
+                        <InputGroup.Text className="bg-transparent border-0">
                             <FaSearch />
                         </InputGroup.Text>
                         <Form.Control
                             type="search"
-                            placeholder="type to search..."
+                            placeholder="Cari film, judul, atau penulis..."
                             className="inputsearch border-0 bg-transparent"
-                            style={{ outline: 'none', boxShadow: 'none' }}
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             aria-label="Search"
@@ -70,52 +148,13 @@ const Header = () => {
                 
                 <Navbar.Toggle aria-controls="basic-navbar-nav" />
                 <Navbar.Collapse id="basic-navbar-nav">
-                    <Nav className="ms-auto nav-links fw-bold align-items-center">
-                        
-                        {/* Dropdown Genre */}
-                        <Dropdown as={Nav.Item}>
-                            <Dropdown.Toggle as={Nav.Link} id="genre-dropdown" className="nav-link text-dark fw-bold text-decoration-none border-0 bg-transparent">
-                                Genre
-                            </Dropdown.Toggle>
-                            <Dropdown.Menu style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                                {genres.map((genre) => (
-                                    <Dropdown.Item 
-                                        key={genre.id} 
-                                        as={Link} 
-                                        to={`/movies?genre=${genre.id}`}
-                                    >
-                                        {genre.name}
-                                    </Dropdown.Item>
-                                ))}
-                            </Dropdown.Menu>
-                        </Dropdown>
-
-                        {/* Dropdown Tahun */}
-                        <Dropdown as={Nav.Item}>
-                            <Dropdown.Toggle as={Nav.Link} id="year-dropdown" className="nav-link text-dark fw-bold text-decoration-none border-0 bg-transparent">
-                                Tahun
-                            </Dropdown.Toggle>
-                            <Dropdown.Menu style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                                {years.map((year) => (
-                                    <Dropdown.Item 
-                                        key={year} 
-                                        as={Link} 
-                                        to={`/movies?year=${year}`}
-                                    >
-                                        {year}
-                                    </Dropdown.Item>
-                                ))}
-                            </Dropdown.Menu>
-                        </Dropdown>
-                    </Nav>
-
-                    <div className="d-flex align-items-center ms-3">
+                    <div className="auth-buttons-container">
                         {user ? (
                             <Dropdown align="end">
                                 <Dropdown.Toggle 
                                     variant="link" 
                                     id="user-dropdown" 
-                                    className="btn btn-info login-btn p-2 text-decoration-none text-dark fw-bold border-0"
+                                    className="btn login-btn user-dropdown-btn text-decoration-none"
                                 >
                                     {user.username}
                                 </Dropdown.Toggle>
@@ -128,15 +167,23 @@ const Header = () => {
                                 </Dropdown.Menu>
                             </Dropdown>
                         ) : (
-                            <Nav.Link 
-                                as={Link} 
-                                to="/signin" 
-                                state={{ from: location.pathname }} 
-                                className="btn btn-info login-btn px-3 py-2 text-dark fw-bold"
-                                style={{ borderRadius: '20px' }} 
-                            >
-                                LOGIN
-                            </Nav.Link>
+                            <>
+                                <Nav.Link 
+                                    as={Link} 
+                                    to="/signin" 
+                                    state={{ from: location.pathname }} 
+                                    className="btn login-btn btn-masuk"
+                                >
+                                    Masuk
+                                </Nav.Link>
+                                <Nav.Link 
+                                    as={Link} 
+                                    to="/signup" 
+                                    className="btn login-btn btn-daftar"
+                                >
+                                    Daftar
+                                </Nav.Link>
+                            </>
                         )}
                     </div>
                 </Navbar.Collapse>
