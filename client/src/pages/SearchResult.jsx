@@ -50,7 +50,7 @@ const SearchResult = () => {
         };
 
         fetchSearchResults();
-    }, [query, isAdult]); // Re-fetch jika query atau isAdult berubah
+    }, [query, isAdult]);
 
     if (isLoading) {
         return (
