@@ -79,7 +79,7 @@ const Header = () => {
                 </Navbar.Brand>
 
                 {/* Dropdown Genre */}
-                <div 
+                <div
                     className="dropdown-container d-none d-lg-block"
                     onMouseEnter={() => setShowGenreDropdown(true)}
                     onMouseLeave={() => setShowGenreDropdown(false)}
@@ -88,7 +88,7 @@ const Header = () => {
                         <span>☰</span> Genre
                         <span className={`dropdown-icon ${showGenreDropdown ? 'active' : ''}`}>▼</span>
                     </button>
-                    
+
                     <div className={`mega-dropdown ${showGenreDropdown ? 'show' : ''}`}>
                         <div className="dropdown-grid">
                             {genreColumns.map((column, colIndex) => (
@@ -110,7 +110,7 @@ const Header = () => {
                 </div>
 
                 {/* Dropdown Tahun */}
-                <div 
+                <div
                     className="dropdown-container d-none d-lg-block"
                     onMouseEnter={() => setShowYearDropdown(true)}
                     onMouseLeave={() => setShowYearDropdown(false)}
@@ -119,7 +119,7 @@ const Header = () => {
                         📅 Tahun
                         <span className={`dropdown-icon ${showYearDropdown ? 'active' : ''}`}>▼</span>
                     </button>
-                    
+
                     <div className={`mega-dropdown mega-dropdown-year ${showYearDropdown ? 'show' : ''}`}>
                         <div className="dropdown-grid">
                             {yearColumns.map((column, colIndex) => (
@@ -139,7 +139,7 @@ const Header = () => {
                         </div>
                     </div>
                 </div>
-                
+
                 {/* Search Bar & 18+ Toggle */}
                 <div className="d-flex align-items-center ms-3 flex-grow-1 justify-content-end" style={{ maxWidth: '600px' }}>
                     <Form onSubmit={handleSearch} className="seach-bar-container w-100 me-2">
@@ -158,32 +158,31 @@ const Header = () => {
                         </InputGroup>
                     </Form>
 
-                    <Button 
-                        variant={isAdult ? "danger" : "outline-secondary"} 
-                        size="sm" 
-                        className="fw-bold text-nowrap"
-                        onClick={toggleAdultFilter}
-                        title="Filter Konten Dewasa"
-                        style={{ borderRadius: '20px', height: '52px', width: '60px' }}
-                    >
-                        {isAdult ? "18+" : "SU"}
-                    </Button>
+                    <div className="adult-toggle-wrapper">
+                        <button
+                            className={`adult-toggle-btn ${isAdult ? "active" : ""}`}
+                            onClick={toggleAdultFilter}
+                        >
+                            {isAdult ? "18+" : "SU"}
+                        </button>
+                    </div>
+
                 </div>
-                
+
                 <Navbar.Toggle aria-controls="basic-navbar-nav" />
                 <Navbar.Collapse id="basic-navbar-nav">
                     <div className="auth-buttons-container ms-auto">
                         {user ? (
                             <Dropdown align="end">
-                                <Dropdown.Toggle 
-                                    variant="link" 
-                                    id="user-dropdown" 
+                                <Dropdown.Toggle
+                                    variant="link"
+                                    id="user-dropdown"
                                     className="btn login-btn user-dropdown-btn text-decoration-none"
                                 >
                                     {user.username}
                                 </Dropdown.Toggle>
                                 <Dropdown.Menu className="profile-dropdown-menu">
-                                    <Dropdown.Item as={Link} to="/profile">Profil</Dropdown.Item> 
+                                    <Dropdown.Item as={Link} to="/profile">Profil</Dropdown.Item>
                                     <Dropdown.Item as={Link} to="/Watchlist">Watchlist</Dropdown.Item>
                                     <Dropdown.Item as={Link} to="/my-reviews">Review</Dropdown.Item>
                                     <Dropdown.Divider />
@@ -192,17 +191,17 @@ const Header = () => {
                             </Dropdown>
                         ) : (
                             <>
-                                <Nav.Link 
-                                    as={Link} 
-                                    to="/signin" 
-                                    state={{ from: location.pathname }} 
+                                <Nav.Link
+                                    as={Link}
+                                    to="/signin"
+                                    state={{ from: location.pathname }}
                                     className="btn login-btn btn-masuk"
                                 >
                                     Masuk
                                 </Nav.Link>
-                                <Nav.Link 
-                                    as={Link} 
-                                    to="/signup" 
+                                <Nav.Link
+                                    as={Link}
+                                    to="/signup"
                                     className="btn login-btn btn-daftar"
                                 >
                                     Daftar
