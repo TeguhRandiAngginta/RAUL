@@ -166,7 +166,7 @@ const Header = () => {
                         title="Filter Konten Dewasa"
                         style={{ borderRadius: '20px', height: '52px', width: '60px' }}
                     >
-                        {isAdult ? "18+" : "All"}
+                        {isAdult ? "18+" : "SU"}
                     </Button>
                 </div>
                 
