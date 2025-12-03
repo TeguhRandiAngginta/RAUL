@@ -11,8 +11,9 @@ import {
     Card,
     Spinner,
     Button,
+    Badge,
 } from "react-bootstrap";
-import { Trash, ArrowLeft, Calendar } from "react-bootstrap-icons";
+import { StarFill, Trash, ArrowLeft, Calendar, Film, Bookmark } from "react-bootstrap-icons";
 import '../styles/Watchlist.css';
 
 const TMDB_API_KEY = "15050283b30a09e0018841fd5769b73b";
@@ -53,10 +54,7 @@ export default function Watchlist() {
                         const movieRes = await axios.get(
                             `https://api.themoviedb.org/3/movie/${movieId}?api_key=${TMDB_API_KEY}&language=id-ID`
                         );
-                        return {
-                            ...movieRes.data,
-                            addedAt: new Date() // Simulasi tanggal ditambahkan
-                        };
+                        return movieRes.data;
                     } catch (error) {
                         console.error(`Gagal fetch movie ${movieId}:`, error);
                         return null;
@@ -92,106 +90,163 @@ export default function Watchlist() {
     };
 
     const handleCardClick = (movieId) => {
-        navigate(`/movies/${movieId}`);
+        navigate(`/movie/${movieId}`);
+    };
+
+    const getRatingColor = (rating) => {
+        if (rating >= 8) return "#10b981";
+        if (rating >= 7) return "#ffc107";
+        if (rating >= 5) return "#ff9800";
+        return "#ef4444";
     };
 
     if (loading) {
         return (
-            <div className="watchlist-loading">
-                <Spinner animation="border" variant="warning" />
-                <p className="mt-3 text-light">Memuat watchlist...</p>
+            <div className="my-reviews-loading">
+                <div className="text-center">
+                    <Spinner animation="border" className="loading-spinner" />
+                    <p className="mt-4 text-light fs-5 fw-light">Memuat watchlist...</p>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="watchlist-page">
-            <Container className="py-3">
-                <Row className="mb-3">
+        <div className="my-reviews-page">
+            <div className="background-decoration" />
+
+            <Container className="py-5 position-relative">
+                {/* Header Section */}
+                <Row className="mb-5">
                     <Col>
                         <Button 
                             variant="outline-light" 
                             onClick={() => navigate(-1)}
-                            size="sm"
-                            className="mb-2"
+                            className="back-button mb-4"
                         >
-                            <ArrowLeft className="me-2" size={16} />
+                            <ArrowLeft className="me-2" size={20} />
                             Kembali
                         </Button>
-                        <h2 className="text-light fw-bold mb-1">Watchlist</h2>
-                        <p className="text-secondary small mb-0">{watchlistMovies.length} film</p>
+                        
+                        <div className="d-flex align-items-center mb-3">
+                            <div className="accent-bar" />
+                            <div>
+                                <h1 className="page-title text-light fw-bold mb-2">
+                                    Watchlist Saya
+                                </h1>
+                                <div className="d-flex align-items-center gap-3">
+                                    <Badge bg="warning" text="dark" className="review-badge">
+                                        <Bookmark className="me-2" size={16} />
+                                        {watchlistMovies.length} Film
+                                    </Badge>
+                                    <p className="text-secondary mb-0 fw-light">
+                                        Film yang ingin ditonton
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </Col>
                 </Row>
 
                 {watchlistMovies.length === 0 ? (
-                    <div className="text-center py-4">
-                        <h5 className="text-light mb-2">Watchlist kosong</h5>
-                        <p className="text-secondary mb-3">Tambahkan film yang ingin ditonton</p>
+                    <div className="empty-state text-center py-5">
+                        <div className="empty-icon">
+                            <Bookmark size={60} color="#ffc107" />
+                        </div>
+                        <h3 className="text-light fw-bold mb-3">Watchlist Kosong</h3>
+                        <p className="text-secondary mb-4 fs-5">
+                            Tambahkan film yang ingin Anda tonton nanti!
+                        </p>
                         <Button 
                             variant="warning" 
-                            size="sm"
                             onClick={() => navigate("/")}
+                            className="explore-button px-5 py-3 fw-bold"
                         >
                             Jelajahi Film
                         </Button>
                     </div>
                 ) : (
-                    <Row className="g-2">
+                    <Row className="g-3 justify-content-start">
                         {watchlistMovies.map((movie) => (
-                            <Col xs={6} sm={4} md={3} lg={2} key={movie.id}>
+                            <Col xs={12} sm={6} lg={4} xl={3} key={movie.id}>
                                 <Card 
-                                    className="watchlist-card"
+                                    className="review-card h-100"
                                     onClick={() => handleCardClick(movie.id)}
+                                    role="button"
+                                    tabIndex={0}
                                 >
-                                    <div className="poster-wrapper">
+                                    {/* Poster Section */}
+                                    <div className="poster-container">
                                         <Card.Img
                                             variant="top"
                                             src={
                                                 movie.poster_path
                                                     ? `${TMDB_IMAGE_BASE}${movie.poster_path}`
-                                                    : "https://via.placeholder.com/300x450?text=No+Image"
+                                                    : "https://via.placeholder.com/500x750?text=No+Image"
                                             }
                                             alt={movie.title}
+                                            className="poster-image"
                                         />
                                         
-                                        {/* Remove Button - Always Visible */}
+                                        <div className="poster-gradient" />
+                                        
+                                        {/* Rating Badge */}
+                                        <div 
+                                            className="rating-badge"
+                                            style={{
+                                                background: `linear-gradient(135deg, ${getRatingColor(movie.vote_average)}dd, ${getRatingColor(movie.vote_average)}ff)`
+                                            }}
+                                        >
+                                            <StarFill size={18} color="#fff" className="me-2" />
+                                            <span className="text-white fw-bold fs-6">
+                                                {movie.vote_average?.toFixed(1)}
+                                            </span>
+                                        </div>
+
+                                        {/* Delete Button */}
                                         <Button
                                             variant="danger"
                                             size="sm"
-                                            className="remove-btn"
+                                            className="delete-button"
                                             onClick={(e) => handleRemove(movie.id, e)}
                                             disabled={removingId === movie.id}
                                         >
                                             {removingId === movie.id ? (
                                                 <Spinner animation="border" size="sm" />
                                             ) : (
-                                                <Trash size={14} />
+                                                <Trash size={18} />
                                             )}
                                         </Button>
                                     </div>
 
-                                    <Card.Body className="p-2">
+                                    <Card.Body className="d-flex flex-column p-4">
                                         {/* Movie Title */}
-                                        <h6 className="movie-title text-light mb-1">
+                                        <h5 className="movie-title text-light fw-bold mb-3">
                                             {movie.title}
-                                        </h6>
-                                        
-                                        {/* Year */}
-                                        <p className="movie-year text-secondary mb-0">
-                                            {movie.release_date?.slice(0, 4) || "N/A"}
-                                        </p>
-                                        
-                                        {/* Date Added */}
-                                        <div className="date-added mt-1">
-                                            <Calendar size={10} className="me-1" />
+                                        </h5>
+
+                                        {/* Release Year & Date */}
+                                        <div className="review-date d-flex align-items-center mb-3 text-secondary">
+                                            <Calendar size={14} className="me-2" />
                                             <span>
-                                                {movie.addedAt?.toLocaleDateString('id-ID', {
-                                                    day: 'numeric',
-                                                    month: 'short'
-                                                })}
+                                                {movie.release_date ? 
+                                                    new Date(movie.release_date).toLocaleDateString('id-ID', {
+                                                        day: 'numeric',
+                                                        month: 'short',
+                                                        year: 'numeric'
+                                                    }) : 'N/A'
+                                                }
                                             </span>
                                         </div>
                                     </Card.Body>
+
+                                    {/* Bottom Accent */}
+                                    <div 
+                                        className="bottom-accent"
+                                        style={{
+                                            background: `linear-gradient(90deg, ${getRatingColor(movie.vote_average)}, transparent)`
+                                        }}
+                                    />
                                 </Card>
                             </Col>
                         ))}

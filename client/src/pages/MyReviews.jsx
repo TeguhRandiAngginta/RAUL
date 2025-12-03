@@ -90,7 +90,7 @@ export default function MyReviews() {
 
     const handleCardClick = (tmdbMovieId) => {
         console.log('Navigating to movie:', tmdbMovieId); // Debug log
-        navigate(`/movies/${tmdbMovieId}`);
+        navigate(`/movie/${tmdbMovieId}`);
     };
 
     const getRatingColor = (rating) => {
@@ -166,7 +166,7 @@ export default function MyReviews() {
                         </Button>
                     </div>
                 ) : (
-                    <Row className="g-4">
+                    <Row className="g-3 justify-content-start">
                         {reviews.map((review) => (
                             <Col xs={12} sm={6} lg={4} xl={3} key={review._id}>
                                 <Card 

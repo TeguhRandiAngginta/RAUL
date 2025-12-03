@@ -257,3 +257,16 @@
         height: 280px;
     }
 }
+
+/* Responsive Atur max-width container */
+@media (min-width: 1200px) {
+    .review-card {
+        max-width: 280px;
+    }
+}
+
+@media (min-width: 1400px) {
+    .review-card {
+        max-width: 300px;
+    }
+}
