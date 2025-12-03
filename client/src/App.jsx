@@ -24,6 +24,7 @@ import VerifyEmail from './pages/VerifyEmail';
 import ResetPassword from './pages/ResetPassword';
 import GenrePage from './pages/GenrePage';
 import YearPage from './pages/YearPage';
+import ProfilePage from './pages/ProfilePage';
 
 const AuthContext = createContext();
 
@@ -112,6 +113,7 @@ function AppContent() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/genre/:genreId" element={<GenrePage />} />
           <Route path="/year/:year" element={<YearPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </main>
       {!hideLayoutRoutes.includes(location.pathname) && <Footer />}
