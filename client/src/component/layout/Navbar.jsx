@@ -12,7 +12,7 @@ const Header = () => {
     const [genres, setGenres] = useState([]);
     const [showGenreDropdown, setShowGenreDropdown] = useState(false);
     const [showYearDropdown, setShowYearDropdown] = useState(false);
-    const [isAdult, setIsAdult] = useState(false); // <-- STATE BARU
+    const [isAdult, setIsAdult] = useState(false);
 
     const { user, logout } = useAuth();
     const navigate = useNavigate();
@@ -34,7 +34,7 @@ const Header = () => {
     }, []);
 
     const handleLogout = () => {
-        setIsAdult(false); // Reset filter saat logout
+        setIsAdult(false);
         logout();
         navigate('/');
     };
@@ -46,15 +46,9 @@ const Header = () => {
     const handleSearch = (e) => {
         e.preventDefault();
         if (input.trim()) {
-            // Sertakan parameter isAdult
             navigate(`/search?query=${input.trim()}&isAdult=${isAdult}`);
             setInput("");
         }
-    };
-
-    // Helper untuk membuat link yang konsisten membawa state 18+
-    const getLinkWithFilter = (path) => {
-        return `${path}&isAdult=${isAdult}`;
     };
 
     // Kelompokkan genre menjadi 3 kolom
@@ -96,7 +90,7 @@ const Header = () => {
                                     {column.map((genre) => (
                                         <Link
                                             key={genre.id}
-                                            to={getLinkWithFilter(`/movies?genre=${genre.id}`)}
+                                            to={`/genre/${genre.id}`}
                                             className="mega-dropdown-item"
                                             onClick={() => setShowGenreDropdown(false)}
                                         >
@@ -127,7 +121,7 @@ const Header = () => {
                                     {column.map((year) => (
                                         <Link
                                             key={year}
-                                            to={getLinkWithFilter(`/movies?year=${year}`)}
+                                            to={`/year/${year}`}
                                             className="mega-dropdown-item"
                                             onClick={() => setShowYearDropdown(false)}
                                         >
@@ -183,7 +177,7 @@ const Header = () => {
                                 </Dropdown.Toggle>
                                 <Dropdown.Menu className="profile-dropdown-menu">
                                     <Dropdown.Item as={Link} to="/profile">Profil</Dropdown.Item>
-                                    <Dropdown.Item as={Link} to="/Watchlist">Watchlist</Dropdown.Item>
+                                    <Dropdown.Item as={Link} to="/watchlist">Watchlist</Dropdown.Item>
                                     <Dropdown.Item as={Link} to="/my-reviews">Review</Dropdown.Item>
                                     <Dropdown.Divider />
                                     <Dropdown.Item onClick={handleLogout}>Logout</Dropdown.Item>

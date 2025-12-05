@@ -69,3 +69,29 @@
     resize: none;
     text-align: center;
 }
+
+.movie-meta-line span {
+    margin-right: 1rem;
+}
+
+@media (max-width: 576px) {
+    .movie-meta-line {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .movie-meta-line span {
+        margin-right: 0;
+        margin-bottom: 4px;
+    }
+}
+
+.actor-link {
+    cursor: pointer;
+    color: #f5f5f5;
+}
+
+.actor-link:hover {
+    color: #ffc107;
+    text-decoration: underline;
+}
