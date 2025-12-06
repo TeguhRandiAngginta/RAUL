@@ -12,8 +12,11 @@ import {
     Spinner,
     Button,
     Badge,
+    Modal,
+    Form,
 } from "react-bootstrap";
-import { StarFill, Trash, ArrowLeft, Calendar, Film } from "react-bootstrap-icons";
+import { StarFill, Trash, ArrowLeft, Calendar, Film, PencilSquare } from "react-bootstrap-icons";
+import { FaStar } from "react-icons/fa";
 import '../styles/MyReviews.css';
 
 const TMDB_API_KEY = "15050283b30a09e0018841fd5769b73b";
@@ -25,6 +28,13 @@ export default function MyReviews() {
     const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [deletingId, setDeletingId] = useState(null);
+
+    // State untuk Edit Modal
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editingReview, setEditingReview] = useState(null);
+    const [editRating, setEditRating] = useState(0);
+    const [editComment, setEditComment] = useState('');
+    const [hoverRating, setHoverRating] = useState(0);
 
     useEffect(() => {
         if (!user) {
@@ -70,6 +80,64 @@ export default function MyReviews() {
         }
     };
 
+    const handleEdit = (review, e) => {
+        e.stopPropagation();
+        setEditingReview(review);
+        setEditRating(review.rating);
+        setEditComment(review.comment);
+        setShowEditModal(true);
+    };
+
+    const handleEditSubmit = async (e) => {
+        e.preventDefault();
+        
+        if (editRating === 0) {
+            toast.error("Harap isi rating bintang!", {
+                duration: 3000,
+                position: 'top-center',
+                style: { background: '#333', color: '#fff' },
+            });
+            return;
+        }
+
+        if (!editComment.trim()) {
+            toast.error("Harap isi ulasan Anda!", {
+                duration: 3000,
+                position: 'top-center',
+                style: { background: '#333', color: '#fff' },
+            });
+            return;
+        }
+
+        try {
+            await api.put(`/reviews/${editingReview._id}`, {
+                rating: editRating,
+                comment: editComment,
+            });
+
+            // Update review di state
+            setReviews(reviews.map(rev => 
+                rev._id === editingReview._id 
+                    ? { ...rev, rating: editRating, comment: editComment }
+                    : rev
+            ));
+
+            setShowEditModal(false);
+            toast.success('Review berhasil diupdate! 🎉', {
+                duration: 3000,
+                position: 'top-center',
+                style: { background: '#333', color: '#fff' },
+            });
+        } catch (error) {
+            console.error("Gagal update review:", error);
+            toast.error(error.response?.data?.message || "Gagal mengupdate review", {
+                duration: 4000,
+                position: 'top-center',
+                style: { background: '#333', color: '#fff' },
+            });
+        }
+    };
+
     const handleDelete = async (reviewId, e) => {
         e.stopPropagation();
         
@@ -89,8 +157,7 @@ export default function MyReviews() {
     };
 
     const handleCardClick = (tmdbMovieId) => {
-        console.log('Navigating to movie:', tmdbMovieId); // Debug log
-        navigate(`/movie/${tmdbMovieId}`);
+        navigate(`/movies/${tmdbMovieId}`);
     };
 
     const getRatingColor = (rating) => {
@@ -203,6 +270,16 @@ export default function MyReviews() {
                                             </span>
                                         </div>
 
+                                        {/* Edit Button */}
+                                        <Button
+                                            variant="warning"
+                                            size="sm"
+                                            className="edit-button"
+                                            onClick={(e) => handleEdit(review, e)}
+                                        >
+                                            <PencilSquare size={18} />
+                                        </Button>
+
                                         {/* Delete Button */}
                                         <Button
                                             variant="danger"
@@ -258,6 +335,89 @@ export default function MyReviews() {
                     </Row>
                 )}
             </Container>
+
+            {/* Edit Modal */}
+            <Modal
+                show={showEditModal}
+                onHide={() => setShowEditModal(false)}
+                centered
+                data-bs-theme="dark"
+            >
+                <Modal.Header closeButton className="bg-dark text-light border-secondary">
+                    <Modal.Title className="w-100 text-center fw-bold">
+                        Edit Review
+                    </Modal.Title>
+                </Modal.Header>
+
+                <Form onSubmit={handleEditSubmit}>
+                    <Modal.Body className="bg-dark text-light d-flex flex-column align-items-center">
+                        <p className="text-secondary mb-2">Rating Anda</p>
+                        
+                        {/* Star Rating */}
+                        <div className="d-flex justify-content-center mb-3">
+                            {[...Array(5)].map((_, index) => {
+                                const ratingValue = index + 1;
+                                return (
+                                    <label key={index} style={{ cursor: "pointer" }}>
+                                        <input
+                                            type="radio"
+                                            name="rating"
+                                            value={ratingValue}
+                                            onClick={() => setEditRating(ratingValue)}
+                                            style={{ display: "none" }}
+                                        />
+                                        <FaStar
+                                            size={40}
+                                            color={ratingValue <= (hoverRating || editRating) ? "#ffc107" : "#e4e5e9"}
+                                            onMouseEnter={() => setHoverRating(ratingValue)}
+                                            onMouseLeave={() => setHoverRating(0)}
+                                            className="mx-1"
+                                        />
+                                    </label>
+                                );
+                            })}
+                        </div>
+
+                        <Form.Group className="mt-3 w-100 text-center d-flex flex-column align-items-center">
+                            <Form.Label className="fw-semibold text-light mb-2">
+                                Ulasan Anda
+                            </Form.Label>
+                            <Form.Control
+                                as="textarea"
+                                rows={4}
+                                placeholder="Bagikan pendapat Anda tentang film ini..."
+                                value={editComment}
+                                onChange={(e) => setEditComment(e.target.value)}
+                                className="bg-dark text-light border-secondary rounded p-3"
+                                style={{
+                                    width: "90%",
+                                    maxWidth: "500px",
+                                    resize: "none",
+                                }}
+                            />
+                        </Form.Group>
+                    </Modal.Body>
+
+                    <Modal.Footer className="bg-dark text-light border-secondary px-4 py-3">
+                        <div className="d-flex justify-content-between w-100 gap-3">
+                            <Button
+                                variant="outline-secondary"
+                                onClick={() => setShowEditModal(false)}
+                                className="px-4 py-2"
+                            >
+                                Batal
+                            </Button>
+                            <Button
+                                variant="warning"
+                                type="submit"
+                                className="text-dark fw-bold px-4 py-2"
+                            >
+                                Update Review
+                            </Button>
+                        </div>
+                    </Modal.Footer>
+                </Form>
+            </Modal>
         </div>
     );
 }
