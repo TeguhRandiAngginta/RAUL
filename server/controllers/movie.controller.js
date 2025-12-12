@@ -68,14 +68,29 @@ export const discoverMovies = async (req, res, next) => {
     try {
         const { page, genre, year, isAdult } = req.query;
         
+        // Logika untuk mengubah string 'true'/'false' menjadi boolean
+        const showAdultContent = isAdult === 'true';
+
         let filterParams = { 
             page: page || 1,
             sort_by: 'popularity.desc',
-            include_adult: isAdult === 'true' // Cek string 'true' dari frontend
+            // include_adult: true hanya untuk pornografi. 
+            // set false secara default agar aplikasi tetap "bersih", 
+            include_adult: false 
         };
         
         if (genre) filterParams.with_genres = genre;
         if (year) filterParams.primary_release_year = year; 
+
+        // --- LOGIKA FILTER UMUR (CERTIFICATION) ---
+        // Jika User TIDAK mengaktifkan mode dewasa (isAdult = false/undefined),
+        // konten dibatasi hanya sampai PG-13.
+        if (!showAdultContent) {
+            filterParams.certification_country = 'US';
+            filterParams['certification.lte'] = 'PG-13'; 
+        }
+        // Jika showAdultContent = true, tidak pasang filter certification, 
+        // jadi film R (Dewasa) akan muncul otomatis.
 
         const response = await axios.get(`${BASE_URL}/discover/movie`, tmdbParams(filterParams));
         res.status(200).json(response.data);
@@ -85,7 +100,7 @@ export const discoverMovies = async (req, res, next) => {
     }
 };
 
-// 4. Search Movies
+// 4. Search Movies (DIPERBAIKI SEDIKIT)
 export const searchMovies = async (req, res, next) => {
     try {
         const { query, page, isAdult } = req.query;
@@ -96,7 +111,9 @@ export const searchMovies = async (req, res, next) => {
 
         const sanitizedQuery = query.replace(/[<>]/g, '');
         const currentPage = page || 1;
-        const includeAdult = isAdult === 'true';
+        
+        // include_adult fungsinya hanya untuk pornografi jika true
+        const includeAdult = isAdult === 'true'; 
 
         // Langkah 1: Cari Film Berdasarkan JUDUL
         const moviesByTitlePromise = axios.get(`${BASE_URL}/search/movie`, tmdbParams({ 
@@ -105,7 +122,7 @@ export const searchMovies = async (req, res, next) => {
             include_adult: includeAdult 
         }));
 
-        // Langkah 2: Cari Orang (Aktor) untuk mendapatkan ID-nya
+        // Langkah 2: Cari Orang
         const personSearchPromise = axios.get(`${BASE_URL}/search/person`, {
             params: {
                 api_key: API_KEY,
@@ -114,41 +131,40 @@ export const searchMovies = async (req, res, next) => {
             }
         });
 
-        // Jalankan kedua request awal secara paralel
         const [titleRes, personRes] = await Promise.all([moviesByTitlePromise, personSearchPromise]);
 
         let moviesByActor = [];
         let foundActorName = null;
 
-        // Langkah 3: Jika aktor ditemukan, cari film berdasarkan ID aktor tersebut
-        if (personRes.data.results.length > 0) {
-            // Ambil orang pertama (paling populer/relevan)
-            const actor = personRes.data.results[0];
-            foundActorName = actor.name; // Simpan nama aktor untuk ditampilkan di frontend
+        // Langkah 3: Filter Hasil Search Manual
+        let moviesResults = titleRes.data.results;
 
-            const moviesByActorRes = await axios.get(`${BASE_URL}/discover/movie`, tmdbParams({
+        if (personRes.data.results.length > 0) {
+            const actor = personRes.data.results[0];
+            foundActorName = actor.name;
+
+            // pakai filter certification karena ini pakai endpoint 'discover'
+            let actorFilterParams = {
                 with_cast: actor.id,
                 page: currentPage,
                 sort_by: 'popularity.desc',
-                include_adult: includeAdult
-            }));
+                include_adult: false
+            };
 
+            if (isAdult !== 'true') {
+                actorFilterParams.certification_country = 'US';
+                actorFilterParams['certification.lte'] = 'PG-13';
+            }
+
+            const moviesByActorRes = await axios.get(`${BASE_URL}/discover/movie`, tmdbParams(actorFilterParams));
             moviesByActor = moviesByActorRes.data.results;
         }
 
-        // Langkah 4: Kirim Respons Terpisah
         res.status(200).json({
-            // Metadata halaman (mengambil dari hasil pencarian judul)
             page: parseInt(currentPage),
             total_pages: titleRes.data.total_pages,
-            
-            // BAGIAN 1: Hasil berdasarkan Judul Film
-            resultsByTitle: titleRes.data.results,
-
-            // BAGIAN 2: Hasil berdasarkan Nama Aktor
-            resultsByActor: moviesByActor,
-            
-            // Info tambahan untuk Frontend: Nama aktor yang ditemukan (misal user cari "tom", ketemu "Tom Cruise")
+            resultsByTitle: moviesResults, // Hasil Judul
+            resultsByActor: moviesByActor, // Hasil Aktor (sudah terfilter rating jika logic di atas dipakai)
             actorName: foundActorName 
         });
 
@@ -158,7 +174,7 @@ export const searchMovies = async (req, res, next) => {
     }
 };
 
-// 6. Get Genres
+// 5. Get Genres
 export const getGenres = async (req, res, next) => {
     try {
         const response = await axios.get(`${BASE_URL}/genre/movie/list`, tmdbParams());
