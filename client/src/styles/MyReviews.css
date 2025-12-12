@@ -257,3 +257,58 @@
         height: 280px;
     }
 }
+
+/* Responsive Atur max-width container */
+@media (min-width: 1200px) {
+    .review-card {
+        max-width: 280px;
+    }
+}
+
+@media (min-width: 1400px) {
+    .review-card {
+        max-width: 300px;
+    }
+}
+
+.edit-button {
+    position: absolute;
+    top: 55px;
+    left: 15px;
+    width: 36px; 
+    height: 36px; 
+    padding: 0; 
+    border-radius: 50%;
+    opacity: 0.95;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+}
+
+.edit-button:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.delete-button {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 50%;
+    opacity: 0.95;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.delete-button:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}

@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux';
 import { setWatchlist, clearUser } from './redux/userSlice';
 import { Toaster } from 'react-hot-toast';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './styles/style.css'; 
+import './styles/style.css';
 import './styles/movieGrid.css';
 import api from './api/api';
 import Home from './pages/Home';
@@ -22,6 +22,9 @@ import MyReviews from './pages/MyReviews';
 import Watchlist from './pages/Watchlist';
 import VerifyEmail from './pages/VerifyEmail';
 import ResetPassword from './pages/ResetPassword';
+import GenrePage from './pages/GenrePage';
+import YearPage from './pages/YearPage';
+import ProfilePage from './pages/ProfilePage';
 
 const AuthContext = createContext();
 
@@ -31,7 +34,7 @@ function AppContent() {
   const location = useLocation();
   const dispatch = useDispatch();
   const hideLayoutRoutes = ['/signin', '/signup', '/forget-password', '/privacy-policy', '/verify-email', '/reset-password'];
-  
+
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -43,12 +46,12 @@ function AppContent() {
     try {
       const res = await api.get('/users/profile');
       setUser({ username: res.data.username });
-      
+
       const watchlistRes = await api.get('/users/watchlist/me');
       dispatch(setWatchlist(watchlistRes.data || []));
-      
+
     } catch (error) {
-      setUser(null); 
+      setUser(null);
       dispatch(setWatchlist([]));
     } finally {
       setIsLoading(false);
@@ -59,7 +62,7 @@ function AppContent() {
     const res = await api.post('/auth/login', { email, password });
     if (res.status === 200) {
       setUser({ username: res.data.username });
-      
+
       const watchlistRes = await api.get('/users/watchlist/me');
       dispatch(setWatchlist(watchlistRes.data || []));
     }
@@ -108,6 +111,9 @@ function AppContent() {
           <Route path="/watchlist" element={<Watchlist />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/genre/:genreId" element={<GenrePage />} />
+          <Route path="/year/:year" element={<YearPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </main>
       {!hideLayoutRoutes.includes(location.pathname) && <Footer />}

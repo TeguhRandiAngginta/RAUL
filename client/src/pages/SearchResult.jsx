@@ -1,10 +1,13 @@
+// SearchResult.jsx
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Spinner } from 'react-bootstrap';
-import api from '../api/api'; // Gunakan api.js langsung
-import MovieCard from '../component/grid/MovieCard';
-import { ArrowLeft, Search, PersonVideo } from 'react-bootstrap-icons';
+import { Container, Row, Col, Spinner, Card } from 'react-bootstrap';
+import api from '../api/api';
+import { ArrowLeft, Search as SearchIcon, PersonVideo, StarFill, Calendar } from 'react-bootstrap-icons';
 import '../styles/searchResult.css';
+import '../styles/GenrePage.css'; // 🔥 supaya .movie-card, .poster-wrapper, dll kepakai
+
+const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
 
 const SearchResult = () => {
     const [searchData, setSearchData] = useState({ resultsByTitle: [], resultsByActor: [], actorName: null });
@@ -14,7 +17,7 @@ const SearchResult = () => {
     const navigate = useNavigate();
     
     const query = searchParams.get('query');
-    const isAdult = searchParams.get('isAdult'); // Ambil status 18+
+    const isAdult = searchParams.get('isAdult');
 
     useEffect(() => {
         if (!query) return;
@@ -23,23 +26,23 @@ const SearchResult = () => {
             setIsLoading(true);
             setError(null);
             try {
-                // Panggil endpoint search di backend
                 const res = await api.get('/movies/search', {
                     params: { query, isAdult }
                 });
-                
+
                 const data = res.data;
                 setSearchData({
                     resultsByTitle: data.resultsByTitle || [],
                     resultsByActor: data.resultsByActor || [],
                     actorName: data.actorName
                 });
-                
-                if ((!data.resultsByTitle || data.resultsByTitle.length === 0) && 
-                    (!data.resultsByActor || data.resultsByActor.length === 0)) {
+
+                if (
+                    (!data.resultsByTitle || data.resultsByTitle.length === 0) &&
+                    (!data.resultsByActor || data.resultsByActor.length === 0)
+                ) {
                     setError(`Tidak ada hasil untuk pencarian "${query}"`);
                 }
-
             } catch (error) {
                 console.error("Gagal mencari film:", error);
                 setError("Terjadi kesalahan saat mencari film");
@@ -52,34 +55,37 @@ const SearchResult = () => {
         fetchSearchResults();
     }, [query, isAdult]);
 
+    const handleCardClick = (movieId) => {
+        navigate(`/movie/${movieId}`);
+    };
+
     if (isLoading) {
         return (
-            <div className="search-loading-container">
-                <div className="search-loading-content">
-                    <Spinner animation="border" variant="warning" className="search-spinner" />
-                    <p className="search-loading-text">Mencari film "{query}"...</p>
-                </div>
+            <div className="genre-loading">
+                <Spinner animation="border" variant="warning" />
+                <p className="mt-3 text-light">Mencari film "{query}"...</p>
             </div>
         );
     }
 
     return (
-        <div className="search-result-page">
-            <div className="search-pattern"></div>
-            
-            <Container className="search-container position-relative z-2">
-                <div className="search-header mb-5">
+        <div className="genre-page">
+            <Container className="py-4">
+                {/* Header ala search */}
+                <div className="search-header mb-4 d-flex flex-column gap-3">
                     <button className="search-back-btn" onClick={() => navigate(-1)}>
                         <ArrowLeft size={20} /> <span>Kembali</span>
                     </button>
-                    
-                    <div className="search-title-wrapper mt-4">
+
+                    <div className="d-flex align-items-center gap-3">
                         <div className="search-icon-wrapper">
-                            <Search size={32} />
+                            <SearchIcon size={32} />
                         </div>
-                        <div className="search-title-content">
-                            <h1 className="search-title">Hasil Pencarian</h1>
-                            <p className="search-query">"{query}" {isAdult === 'true' && <span className="badge bg-danger ms-2">18+</span>}</p>
+                        <div>
+                            <h1 className="text-light fw-bold m-0">Hasil Pencarian</h1>
+                            <p className="search-query m-0">
+                                "{query}" {isAdult === 'true' && <span className="badge bg-danger ms-2">18+</span>}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -95,33 +101,91 @@ const SearchResult = () => {
                     </div>
                 ) : (
                     <div className="search-results-content">
-                        {/* BAGIAN 1: HASIL BERDASARKAN JUDUL */}
+                        {/* BAGIAN 1: JUDUL */}
                         {searchData.resultsByTitle.length > 0 && (
                             <section className="mb-5">
-                                <h4 className="text-warning mb-4 border-bottom border-secondary pb-2">
+                                <h4 className="text-warning mb-3 border-bottom border-secondary pb-2">
                                     Berdasarkan Judul Film
                                 </h4>
-                                <Row className="g-4">
+                                <Row className="g-3 justify-content-start">
                                     {searchData.resultsByTitle.map((movie) => (
-                                        <Col key={movie.id} xs={12} sm={6} md={4} lg={3} xl={2.4}>
-                                            <MovieCard movie={movie} />
+                                        <Col key={movie.id} xs={6} sm={4} md={3} lg={2}>
+                                            <Card
+                                                className="movie-card"
+                                                onClick={() => handleCardClick(movie.id)}
+                                            >
+                                                <div className="poster-wrapper">
+                                                    <Card.Img
+                                                        variant="top"
+                                                        src={
+                                                            movie.poster_path
+                                                                ? `${TMDB_IMAGE_BASE}${movie.poster_path}`
+                                                                : 'https://via.placeholder.com/300x450?text=No+Image'
+                                                        }
+                                                        alt={movie.title}
+                                                    />
+                                                    <div className="rating-overlay">
+                                                        <StarFill size={12} className="me-1" />
+                                                        <span>{movie.vote_average?.toFixed(1)}</span>
+                                                    </div>
+                                                </div>
+
+                                                <Card.Body className="p-2">
+                                                    <h6 className="movie-title text-light mb-1">
+                                                        {movie.title}
+                                                    </h6>
+                                                    <div className="movie-year text-secondary">
+                                                        <Calendar size={10} className="me-1" />
+                                                        {movie.release_date?.slice(0, 4) || 'N/A'}
+                                                    </div>
+                                                </Card.Body>
+                                            </Card>
                                         </Col>
                                     ))}
                                 </Row>
                             </section>
                         )}
 
-                        {/* BAGIAN 2: HASIL BERDASARKAN AKTOR */}
+                        {/* BAGIAN 2: AKTOR */}
                         {searchData.resultsByActor.length > 0 && (
                             <section>
-                                <h4 className="text-info mb-4 border-bottom border-secondary pb-2 d-flex align-items-center">
+                                <h4 className="text-info mb-3 border-bottom border-secondary pb-2 d-flex align-items-center">
                                     <PersonVideo className="me-2" />
                                     Film yang dibintangi: {searchData.actorName}
                                 </h4>
-                                <Row className="g-4">
+                                <Row className="g-3 justify-content-start">
                                     {searchData.resultsByActor.map((movie) => (
-                                        <Col key={movie.id} xs={12} sm={6} md={4} lg={3} xl={2}>
-                                            <MovieCard movie={movie} />
+                                        <Col key={movie.id} xs={6} sm={4} md={3} lg={2}>
+                                            <Card
+                                                className="movie-card"
+                                                onClick={() => handleCardClick(movie.id)}
+                                            >
+                                                <div className="poster-wrapper">
+                                                    <Card.Img
+                                                        variant="top"
+                                                        src={
+                                                            movie.poster_path
+                                                                ? `${TMDB_IMAGE_BASE}${movie.poster_path}`
+                                                                : 'https://via.placeholder.com/300x450?text=No+Image'
+                                                        }
+                                                        alt={movie.title}
+                                                    />
+                                                    <div className="rating-overlay">
+                                                        <StarFill size={12} className="me-1" />
+                                                        <span>{movie.vote_average?.toFixed(1)}</span>
+                                                    </div>
+                                                </div>
+
+                                                <Card.Body className="p-2">
+                                                    <h6 className="movie-title text-light mb-1">
+                                                        {movie.title}
+                                                    </h6>
+                                                    <div className="movie-year text-secondary">
+                                                        <Calendar size={10} className="me-1" />
+                                                        {movie.release_date?.slice(0, 4) || 'N/A'}
+                                                    </div>
+                                                </Card.Body>
+                                            </Card>
                                         </Col>
                                     ))}
                                 </Row>

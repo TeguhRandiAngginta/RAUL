@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useSelector, useDispatch } from 'react-redux';
-import { toggleWatchlistState } from '../redux/userSlice';
+import { useSelector, useDispatch } from "react-redux";
+import { toggleWatchlistState } from "../redux/userSlice";
 import api from "../api/api";
-import toast from 'react-hot-toast';
-import { useAuth } from "../App.jsx"; // <-- 1. KEMBALIKAN IMPORT USEAUTH
+import toast from "react-hot-toast";
+import { useAuth } from "../App.jsx";
 import {
     Container,
     Row,
@@ -23,13 +23,13 @@ import {
     BookmarkCheckFill,
 } from "react-bootstrap-icons";
 import { FaStar } from "react-icons/fa";
-import '../styles/MovieDetail.css'; // Import file CSS yang sudah dipisah
+import "../styles/MovieDetail.css";
 
-// Komponen StarRating kustom untuk di dalam Modal
+// ===== Komponen star rating di modal =====
 const StarRating = ({ rating, setRating, hover, setHover }) => {
     return (
         <div className="d-flex justify-content-center mb-3">
-            {[...Array(5)].map((star, index) => {
+            {[...Array(5)].map((_, index) => {
                 const ratingValue = index + 1;
                 return (
                     <label key={index} className="star-label">
@@ -54,16 +54,27 @@ const StarRating = ({ rating, setRating, hover, setHover }) => {
     );
 };
 
+// helper: cek apakah string “Latin” (ASCII basic)
+const isAscii = (str = "") =>
+    /^[\u0000-\u007F\s'".,-]+$/.test(str);
+
+// pilih nama aktor versi alfabet Latin kalau tersedia
+const getActorName = (actor = {}) => {
+    const name = actor.name || "";
+    const originalName = actor.original_name || "";
+
+    if (isAscii(name) && name.trim() !== "") return name;
+    if (isAscii(originalName) && originalName.trim() !== "") return originalName;
+    return name || originalName || "Unknown";
+};
+
 export default function MovieDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
     const dispatch = useDispatch();
-    
-    // --- INI PERBAIKANNYA ---
-    const { user } = useAuth(); // <-- 2. Gunakan useAuth() untuk mengecek status login
-    const { watchlist } = useSelector((state) => state.user); // <-- 3. Gunakan Redux HANYA untuk watchlist
-    // ---------------------
+    const { user } = useAuth();
+    const { watchlist } = useSelector((state) => state.user);
 
     const [movie, setMovie] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -85,10 +96,11 @@ export default function MovieDetail() {
             try {
                 const movieRes = await api.get(`/movies/${id}`);
                 setMovie(movieRes.data);
+
                 const reviewsRes = await api.get(`/reviews/movie/${id}`);
                 setReviews(reviewsRes.data);
             } catch (error) {
-                console.error("Gagal ambil data film atau review:", error);
+                console.error("Gagal ambil data film:", error);
                 toast.error("Gagal memuat data film");
             } finally {
                 setLoading(false);
@@ -99,12 +111,12 @@ export default function MovieDetail() {
     }, [id]);
 
     const handleShowModal = () => {
-        if (user) { // <-- 4. Ganti 'currentUser' menjadi 'user' dari useAuth
+        if (user) {
             setShowReviewModal(true);
         } else {
             toast.error("Silakan login terlebih dahulu", {
                 duration: 2000,
-                style: { background: '#333', color: '#fff' },
+                style: { background: "#333", color: "#fff" },
             });
             setTimeout(() => {
                 navigate("/signin", { state: { from: location } });
@@ -125,8 +137,8 @@ export default function MovieDetail() {
         if (userRating === 0) {
             toast.error("Harap isi rating bintang!", {
                 duration: 3000,
-                position: 'top-center',
-                style: { background: '#333', color: '#fff' },
+                position: "top-center",
+                style: { background: "#333", color: "#fff" },
             });
             return;
         }
@@ -134,8 +146,8 @@ export default function MovieDetail() {
         if (!userReview.trim()) {
             toast.error("Harap isi ulasan Anda!", {
                 duration: 3000,
-                position: 'top-center',
-                style: { background: '#333', color: '#fff' },
+                position: "top-center",
+                style: { background: "#333", color: "#fff" },
             });
             return;
         }
@@ -147,45 +159,48 @@ export default function MovieDetail() {
         };
 
         try {
-            const res = await api.post('/reviews', reviewData);
+            const res = await api.post("/reviews", reviewData);
             setReviews([res.data, ...reviews]);
             handleCloseModal();
-            toast.success('Review berhasil dikirim! 🎉', {
+            toast.success("Review berhasil dikirim! 🎉", {
                 duration: 3000,
-                position: 'top-center',
-                style: { background: '#333', color: '#fff' },
+                position: "top-center",
+                style: { background: "#333", color: "#fff" },
             });
         } catch (error) {
             console.error("Gagal mengirim review:", error);
-            toast.error(error.response?.data?.message || "Gagal menyimpan review", {
-                duration: 4000,
-                position: 'top-center',
-                style: { background: '#333', color: '#fff' },
-            });
+            toast.error(
+                error.response?.data?.message || "Gagal menyimpan review",
+                {
+                    duration: 4000,
+                    position: "top-center",
+                    style: { background: "#333", color: "#fff" },
+                }
+            );
         }
     };
 
     const handleToggleWatchlist = async () => {
-        if (!user) { // <-- 5. Ganti 'currentUser' menjadi 'user' dari useAuth
+        if (!user) {
             toast.error("Anda harus login untuk menambah watchlist", {
                 duration: 2000,
-                style: { background: '#333', color: '#fff' },
+                style: { background: "#333", color: "#fff" },
             });
             setTimeout(() => {
-                navigate('/signin', { state: { from: location } });
+                navigate("/signin", { state: { from: location } });
             }, 1300);
             return;
         }
 
         setWatchlistLoading(true);
-        const apiCall = api.post('/users/watchlist/toggle', {
+        const apiCall = api.post("/users/watchlist/toggle", {
             tmdbMovieId: numericMovieId,
         });
 
         toast.promise(
             apiCall,
             {
-                loading: 'Memperbarui watchlist...',
+                loading: "Memperbarui watchlist...",
                 success: (res) => {
                     dispatch(toggleWatchlistState(numericMovieId));
                     setWatchlistLoading(false);
@@ -193,11 +208,13 @@ export default function MovieDetail() {
                 },
                 error: (err) => {
                     setWatchlistLoading(false);
-                    return err.response?.data?.message || 'Gagal memperbarui watchlist';
+                    return (
+                        err.response?.data?.message || "Gagal memperbarui watchlist"
+                    );
                 },
             },
             {
-                style: { background: '#333', color: '#fff' },
+                style: { background: "#333", color: "#fff" },
             }
         );
     };
@@ -215,7 +232,11 @@ export default function MovieDetail() {
         return (
             <div className="text-center mt-5 movie-detail-state-container">
                 <h2 className="text-light">Film tidak ditemukan 😢</h2>
-                <Button variant="warning" className="mt-3" onClick={() => navigate(-1)}>
+                <Button
+                    variant="warning"
+                    className="mt-3"
+                    onClick={() => navigate(-1)}
+                >
                     <ArrowLeft className="me-2" />
                     Kembali
                 </Button>
@@ -223,9 +244,58 @@ export default function MovieDetail() {
         );
     }
 
+    // ====== INFO TAMBAHAN FILM ======
     const director =
-        movie.credits?.crew?.find((person) => person.job === "Director")?.name ||
-        "N/A";
+        movie.credits?.crew?.find((p) => p.job === "Director")?.name || "N/A";
+
+    const mainCast = movie.credits?.cast
+        ? movie.credits.cast.slice(0, 3)
+        : [];
+
+    const runtimeText = movie.runtime ? `${movie.runtime} menit` : "N/A";
+    const originalLanguage = movie.original_language?.toUpperCase() || "N/A";
+
+    // rating umur mentah dari TMDB
+    let rawAgeRating = "N/A";
+    const releases = movie.release_dates?.results || [];
+    if (releases.length > 0) {
+        const found =
+            releases.find((r) => r.iso_3166_1 === "ID") ||
+            releases.find((r) => r.iso_3166_1 === "US") ||
+            releases[0];
+
+        const cert = found.release_dates?.find((d) => d.certification);
+        if (cert?.certification) rawAgeRating = cert.certification;
+    }
+
+    // normalisasi rating umur → 18+ / 13+ / 10+ / SU
+    const displayAgeRating = (() => {
+        if (!rawAgeRating || rawAgeRating === "N/A") return "N/A";
+
+        const digits = rawAgeRating.match(/\d+/);
+        if (digits) {
+            const num = parseInt(digits[0], 10);
+            if (!Number.isNaN(num)) return `${num}+`;
+        }
+
+        const code = rawAgeRating.toUpperCase();
+
+        if (["NC-17", "R", "D17", "TV-MA"].includes(code)) return "18+";
+        if (["PG-13", "R13"].includes(code)) return "13+";
+        if (["PG", "R7", "TV-PG"].includes(code)) return "10+";
+        if (["G", "SU", "TV-Y", "TV-G"].includes(code)) return "SU";
+
+        return rawAgeRating;
+    })();
+
+    const handleActorClick = (actor) => {
+        const name = getActorName(actor);
+        navigate(
+            `/search?query=${encodeURIComponent(
+                name
+            )}&isAdult=${movie.adult ? "true" : "false"}`
+        );
+    };
 
     return (
         <div
@@ -251,15 +321,15 @@ export default function MovieDetail() {
                             className="rounded shadow-lg movie-poster-img"
                         />
                         <div className="d-flex justify-content-center gap-3 mt-3">
-                            <div className="text-center">
+                            <div>
                                 <EyeFill size={20} className="text-success" />{" "}
                                 <small>{movie.popularity?.toFixed(0) || "0"}</small>
                             </div>
-                            <div className="text-center">
+                            <div>
                                 <HeartFill size={18} className="text-danger" />{" "}
                                 <small>{movie.vote_count || "0"}</small>
                             </div>
-                            <div className="text-center">
+                            <div>
                                 <StarFill size={18} className="text-warning" />{" "}
                                 <small>{movie.vote_average?.toFixed(1) || "0"}</small>
                             </div>
@@ -272,6 +342,40 @@ export default function MovieDetail() {
                             {movie.release_date?.slice(0, 4)} • Directed by{" "}
                             <span className="text-info">{director}</span>
                         </p>
+
+                        {/* META FILM – pakai flex + gap supaya tidak nabrak */}
+                        <div className="d-flex flex-wrap gap-3 small text-secondary mb-2">
+                            <span>
+                                <strong>Durasi:</strong> {runtimeText}
+                            </span>
+                            <span>
+                                <strong>Rating Umur:</strong> {displayAgeRating}
+                            </span>
+                            <span>
+                                <strong>Bahasa Asli:</strong> {originalLanguage}
+                            </span>
+                        </div>
+
+                        {/* Pemeran utama, nama sudah difilter ke alfabet Latin & bisa diklik */}
+                        <p className="text-secondary mb-3">
+                            <strong>Pemeran utama:</strong>{" "}
+                            {mainCast.length === 0
+                                ? "N/A"
+                                : mainCast.map((actor, index) => {
+                                    const displayName = getActorName(actor);
+                                    return (
+                                        <span
+                                            key={actor.id || actor.name || index}
+                                            className="actor-link"
+                                            onClick={() => handleActorClick(actor)}
+                                        >
+                                            {displayName}
+                                            {index < mainCast.length - 1 ? ", " : ""}
+                                        </span>
+                                    );
+                                })}
+                        </p>
+
                         {movie.tagline && (
                             <p className="text-uppercase fw-bold text-warning mb-3">
                                 {movie.tagline}
@@ -296,16 +400,6 @@ export default function MovieDetail() {
                         )}
 
                         <div className="d-flex gap-3 my-4 flex-wrap">
-                            {movie.homepage && (
-                                <Button
-                                    variant="outline-light"
-                                    href={movie.homepage}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
-                                    <EyeFill /> Website
-                                </Button>
-                            )}
                             <Button variant="outline-light" onClick={handleShowModal}>
                                 <StarFill /> Rate
                             </Button>
@@ -314,44 +408,22 @@ export default function MovieDetail() {
                                 onClick={handleToggleWatchlist}
                                 disabled={watchlistLoading}
                             >
-                                {isMovieInWatchlist ?
-                                    <BookmarkCheckFill className="me-2" /> :
+                                {isMovieInWatchlist ? (
+                                    <BookmarkCheckFill className="me-2" />
+                                ) : (
                                     <BookmarkPlus className="me-2" />
-                                }
-                                {watchlistLoading ? 'Menyimpan...' : (isMovieInWatchlist ? 'Hapus Watchlist' : 'Tambah Watchlist')}
+                                )}
+                                {watchlistLoading
+                                    ? "Menyimpan..."
+                                    : isMovieInWatchlist
+                                        ? "Hapus Watchlist"
+                                        : "Tambah Watchlist"}
                             </Button>
-                        </div>
-
-                        <div className="d-flex align-items-center">
-                            <h5 className="me-2">Rating TMDB:</h5>
-                            {[...Array(5)].map((_, i) => {
-                                const ratingOutOf5 = movie.vote_average / 2;
-                                const isFilled = i < Math.floor(ratingOutOf5);
-                                const isHalf =
-                                    i === Math.floor(ratingOutOf5) && ratingOutOf5 % 1 >= 0.5;
-
-                                return (
-                                    <StarFill
-                                        key={i}
-                                        color={isFilled || isHalf ? "#ffc107" : "#555"}
-                                        className="me-1"
-                                        style={{ opacity: isHalf ? 0.6 : 1 }}
-                                    />
-                                );
-                            })}
-                            <span className="ms-2 fw-bold">
-                                {(movie.vote_average / 2).toFixed(1)}/5
-                            </span>
-                            <span
-                                className="ms-2 text-secondary tmdb-rating-text"
-                            >
-                                (Rating TMDB: {movie.vote_average?.toFixed(1)}/10)
-                            </span>
                         </div>
                     </Col>
                 </Row>
 
-                {/* --- Bagian Review --- */}
+                {/* REVIEW SECTION */}
                 <Row className="mt-5">
                     <Col md={12}>
                         <h5 className="fw-bold text-light mb-3">Ulasan Pengguna</h5>
@@ -359,10 +431,7 @@ export default function MovieDetail() {
                             <p className="text-white">Belum ada ulasan. Jadilah yang pertama!</p>
                         ) : (
                             reviews.map((rev) => (
-                                <div
-                                    key={rev._id}
-                                    className="p-3 mb-3 rounded review-card"
-                                >
+                                <div key={rev._id} className="p-3 mb-3 rounded review-card">
                                     <p className="fw-bold text-warning mb-1">
                                         {rev.user?.username || "User"}{" "}
                                         {[...Array(5)].map((_, index) => (
@@ -374,7 +443,9 @@ export default function MovieDetail() {
                                             />
                                         ))}
                                     </p>
-                                    <p className="text-light mb-0">{rev.comment || rev.text}</p>
+                                    <p className="text-light mb-0">
+                                        {rev.comment || rev.text}
+                                    </p>
                                 </div>
                             ))
                         )}
@@ -382,7 +453,7 @@ export default function MovieDetail() {
                 </Row>
             </Container>
 
-            {/* --- Modal untuk Review --- */}
+            {/* MODAL REVIEW – versi “bawaan” yang lebih tebal & rapi */}
             <Modal
                 show={showReviewModal}
                 onHide={handleCloseModal}
@@ -416,7 +487,7 @@ export default function MovieDetail() {
                             <Form.Control
                                 as="textarea"
                                 rows={4}
-                                placeholder="Bagikan pendapat Anda tentang film ini..."
+                                placeholder="Bagikan pendapat Anda..."
                                 value={userReview}
                                 onChange={(e) => setUserReview(e.target.value)}
                                 className="bg-dark text-light border-secondary rounded p-3 review-textarea"
