@@ -20,7 +20,7 @@ export const getPopularMovies = async (req, res, next) => {
     try {
         const page = req.query.page || 1; 
         // Gunakan helper
-        const response = await axios.get(`${BASE_URL}/movie/popular`, tmdbParams({ page }));
+        const response = await axios.get(`${BASE_URL}/movie/popular`, tmdbParams({ page, language: 'en-US' }));
         res.status(200).json(response.data);
     } catch (error) {
         next({ status: error.response?.status || 500, message: 'Gagal mengambil data dari TMDB' });
@@ -76,7 +76,8 @@ export const discoverMovies = async (req, res, next) => {
             sort_by: 'popularity.desc',
             // include_adult: true hanya untuk pornografi. 
             // set false secara default agar aplikasi tetap "bersih", 
-            include_adult: false 
+            include_adult: false, 
+            language: 'en-US'
         };
         
         if (genre) filterParams.with_genres = genre;
@@ -125,7 +126,8 @@ export const searchMovies = async (req, res, next) => {
         const moviesByTitlePromise = axios.get(`${BASE_URL}/search/movie`, tmdbParams({ 
             query: sanitizedQuery, 
             page: currentPage,
-            include_adult: showAdultContent 
+            include_adult: showAdultContent,
+            language: 'en-US'
         }));
 
         // Langkah 2: Cari Orang
@@ -133,7 +135,8 @@ export const searchMovies = async (req, res, next) => {
             params: {
                 api_key: API_KEY,
                 query: sanitizedQuery,
-                include_adult: showAdultContent
+                include_adult: showAdultContent,
+                language: 'en-US'
             }
         });
 
@@ -170,7 +173,8 @@ export const searchMovies = async (req, res, next) => {
                 with_cast: actor.id,
                 page: currentPage,
                 sort_by: 'popularity.desc',
-                include_adult: false
+                include_adult: false,
+                language: 'en-US'
             };
 
             if (!showAdultContent) {
