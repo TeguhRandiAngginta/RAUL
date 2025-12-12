@@ -1,10 +1,10 @@
 import api from './api';
 
 // Mengambil film populer
-export const fetchPopularMovies = async (page = 1) => {
+export const fetchPopularMovies = async (page = 1, isAdult = false) => {
     try {
         const res = await api.get('/movies/popular', {
-            params: { page },
+            params: { page, isAdult },
         });
         return res.data;
     } catch (error) {
@@ -36,10 +36,10 @@ export const fetchGenres = async () => {
 };
 
 // Mencari film berdasarkan query (kata kunci)
-export const searchMovies = async (query, page = 1) => {
+export const searchMovies = async (query, page = 1, isAdult = false) => {
     try {
         const res = await api.get('/movies/search', {
-            params: { query, page }
+            params: { query, page, isAdult }
         });
         return res.data;
     } catch (error) {

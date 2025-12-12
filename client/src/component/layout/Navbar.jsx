@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Navbar, Nav, Container, Dropdown, Form, InputGroup, Button } from "react-bootstrap";
 import { FaSearch } from "react-icons/fa";
 import { useAuth } from '../../App';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import api from '../../api/api';
 import logoWeb from '../../assets/logo/logoWeb.png';
 import '../../styles/navbar.css';
@@ -12,7 +12,10 @@ const Header = () => {
     const [genres, setGenres] = useState([]);
     const [showGenreDropdown, setShowGenreDropdown] = useState(false);
     const [showYearDropdown, setShowYearDropdown] = useState(false);
-    const [isAdult, setIsAdult] = useState(false);
+
+    const [searchParams, setSearchParams] = useSearchParams();
+    const isAdultParam = searchParams.get('isAdult') === 'true';
+    const [isAdult, setIsAdult] = useState(isAdultParam);
 
     const { user, logout } = useAuth();
     const navigate = useNavigate();
@@ -33,6 +36,10 @@ const Header = () => {
         fetchGenres();
     }, []);
 
+    useEffect(() => {
+        setIsAdult(searchParams.get('isAdult') === 'true');
+    }, [searchParams]);
+
     const handleLogout = () => {
         setIsAdult(false);
         logout();
@@ -40,15 +47,32 @@ const Header = () => {
     };
 
     const toggleAdultFilter = () => {
-        setIsAdult(!isAdult);
+        const newValue = !isAdult;
+        setIsAdult(newValue);
+
+        // Update URL agar halaman (MovieList/Search) mendeteksi perubahan dan refresh data
+        const newParams = new URLSearchParams(searchParams);
+        if (newValue) {
+            newParams.set('isAdult', 'true');
+        } else {
+            newParams.delete('isAdult'); // Hapus param jika false agar URL bersih
+        }
+        
+        // Tetap di halaman yang sama, cuma ubah query params
+        setSearchParams(newParams);
     };
 
     const handleSearch = (e) => {
         e.preventDefault();
         if (input.trim()) {
+            // Sertakan status isAdult saat search
             navigate(`/search?query=${input.trim()}&isAdult=${isAdult}`);
             setInput("");
         }
+    };
+
+    const getLink = (path) => {
+        return isAdult ? `${path}?isAdult=true` : path;
     };
 
     // Kelompokkan genre menjadi 3 kolom
@@ -90,7 +114,7 @@ const Header = () => {
                                     {column.map((genre) => (
                                         <Link
                                             key={genre.id}
-                                            to={`/genre/${genre.id}`}
+                                            to={getLink(`/genre/${genre.id}`)}
                                             className="mega-dropdown-item"
                                             onClick={() => setShowGenreDropdown(false)}
                                         >
@@ -121,7 +145,7 @@ const Header = () => {
                                     {column.map((year) => (
                                         <Link
                                             key={year}
-                                            to={`/year/${year}`}
+                                            to={getLink(`/year/${year}`)}
                                             className="mega-dropdown-item"
                                             onClick={() => setShowYearDropdown(false)}
                                         >
