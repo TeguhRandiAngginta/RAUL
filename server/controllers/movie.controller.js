@@ -100,7 +100,7 @@ export const discoverMovies = async (req, res, next) => {
     }
 };
 
-// 4. Search Movies (DIPERBAIKI SEDIKIT)
+// 4. Search Movies
 export const searchMovies = async (req, res, next) => {
     try {
         const { query, page, isAdult } = req.query;
@@ -111,15 +111,13 @@ export const searchMovies = async (req, res, next) => {
 
         const sanitizedQuery = query.replace(/[<>]/g, '');
         const currentPage = page || 1;
-        
-        // include_adult fungsinya hanya untuk pornografi jika true
-        const includeAdult = isAdult === 'true'; 
+        const showAdultContent = isAdult === 'true'; //cek status isAdult
 
         // Langkah 1: Cari Film Berdasarkan JUDUL
         const moviesByTitlePromise = axios.get(`${BASE_URL}/search/movie`, tmdbParams({ 
             query: sanitizedQuery, 
             page: currentPage,
-            include_adult: includeAdult 
+            include_adult: showAdultContent 
         }));
 
         // Langkah 2: Cari Orang
@@ -127,7 +125,7 @@ export const searchMovies = async (req, res, next) => {
             params: {
                 api_key: API_KEY,
                 query: sanitizedQuery,
-                include_adult: includeAdult
+                include_adult: showAdultContent
             }
         });
 
@@ -138,6 +136,14 @@ export const searchMovies = async (req, res, next) => {
 
         // Langkah 3: Filter Hasil Search Manual
         let moviesResults = titleRes.data.results;
+        //filter manual 
+        if (!showAdultContent) {
+            moviesResults = moviesResults.filter(movie => {
+                // Genre IDs: 27=Horror, 80=Crime, 53=Thriller
+                const isAdultGenre = movie.genre_ids.includes(27) || movie.genre_ids.includes(80) || movie.genre_ids.includes(53);
+                return !isAdultGenre;
+            });
+        }
 
         if (personRes.data.results.length > 0) {
             const actor = personRes.data.results[0];
