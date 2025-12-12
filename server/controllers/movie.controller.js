@@ -32,50 +32,42 @@ export const getMovieDetails = async (req, res, next) => {
     try {
         const { id } = req.params;
 
-        //Ambil Detail Film & Video (Bahasa Indonesia)
-        // Kita HAPUS 'credits' dari append_to_response di sini karena kita mau ambil terpisah
-        const moviePromise = axios.get(
+        // REQUEST 1 (UTAMA): Ambil data lengkap dalam Bahasa Inggris
+        // JUDUL (Title) dan NAMA AKTOR (Credits) menggunakan huruf Latin/Internasional.
+        const englishPromise = axios.get(
             `${BASE_URL}/movie/${id}`, 
-            tmdbParams({ append_to_response: 'videos' }) 
+            tmdbParams({ 
+                language: 'en-US', // Paksa Inggris
+                append_to_response: 'credits,videos' // ambil cast & video
+            })
         );
 
-        //Ambil Credits/Pemeran (Bahasa Inggris)
-        // Kita request khusus endpoint credits dengan language 'en-US' agar nama aktor pakai huruf Latin
-        const creditsPromise = axios.get(
-            `${BASE_URL}/movie/${id}/credits`,
-            { 
-                params: { 
-                    api_key: API_KEY, 
-                    language: 'en-US' // Paksa nama aktor jadi Inggris/Internasional
-                } 
-            }
+        // REQUEST 2 : Ambil data dalam Bahasa Indonesia untuk mengambil Overview (Sinopsis)
+        const indoPromise = axios.get(
+            `${BASE_URL}/movie/${id}`,
+            tmdbParams({ language: 'id-ID' }) // Default Indo
         );
 
-        // Jalankan kedua request secara paralel (biar loading tetap cepat)
-        const [movieRes, creditsRes] = await Promise.all([moviePromise, creditsPromise]);
+        // Jalankan Paralel
+        const [englishRes, indoRes] = await Promise.all([englishPromise, indoPromise]);
 
-        let movieData = movieRes.data;
+        // Gunakan data Inggris sebagai basis utama
+        let finalMovieData = englishRes.data;
+        const indoMovieData = indoRes.data;
 
-        //Masukkan data credits Inggris ke dalam object movie Indonesia
-        movieData.credits = creditsRes.data;
+        // --- LOGIKA PATCHING ---
+        // Timpa overview Inggris dengan Indonesia JIKA ada isinya
+        if (indoMovieData.overview && indoMovieData.overview.trim() !== "") {
+            finalMovieData.overview = indoMovieData.overview;
+        }
 
-        // LOGIKA FALLBACK
-        // Jika overview (sinopsis) Indonesia kosong, ambil dari Inggris
-        if (!movieData.overview || movieData.overview.trim() === "") {
-            try {
-                const englishResponse = await axios.get(`${BASE_URL}/movie/${id}`, {
-                    params: { api_key: API_KEY, language: 'en-US' } 
-                });
-                
-                movieData.overview = englishResponse.data.overview;
-                if (!movieData.tagline) movieData.tagline = englishResponse.data.tagline;
-                
-            } catch (err) {
-                console.log("Gagal mengambil fallback bahasa Inggris", err.message);
-            }
+        // Opsional: Timpa tagline juga jika ada versi Indo
+        if (indoMovieData.tagline && indoMovieData.tagline.trim() !== "") {
+            finalMovieData.tagline = indoMovieData.tagline;
         }
         
-        res.status(200).json(movieData);
+        res.status(200).json(finalMovieData);
+
     } catch (error) {
         next({ status: error.response?.status || 500, message: 'Gagal mengambil data dari TMDB' });
     }
