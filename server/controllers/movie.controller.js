@@ -139,9 +139,17 @@ export const searchMovies = async (req, res, next) => {
         //filter manual 
         if (!showAdultContent) {
             moviesResults = moviesResults.filter(movie => {
-                // Genre IDs: 27=Horror, 80=Crime, 53=Thriller
-                const isAdultGenre = movie.genre_ids.includes(27) || movie.genre_ids.includes(80) || movie.genre_ids.includes(53);
-                return !isAdultGenre;
+                // Daftar ID Genre Terlarang untuk mode "SU":
+                // 27: Horror (Hantu/Darah)
+                // 80: Crime (Kriminal/Kekerasan)
+                // 53: Thriller (Ketegangan/Psikopat/Vulgar)
+                // 10749: Romance (Sering ada adegan seksual)
+                const forbiddenGenres = [27, 80, 53, 10749, 14]; 
+                // Cek apakah film punya SALAH SATU genre terlarang
+                const hasForbiddenGenre = movie.genre_ids.some(id => forbiddenGenres.includes(id));
+
+                // Kembalikan true jika TIDAK punya genre terlarang (film lolos filter)
+                return !hasForbiddenGenre;
             });
         }
 
@@ -149,7 +157,7 @@ export const searchMovies = async (req, res, next) => {
             const actor = personRes.data.results[0];
             foundActorName = actor.name;
 
-            // pakai filter certification karena ini pakai endpoint 'discover'
+            // Filter Certification untuk Discover (Aktor) juga harus ketat
             let actorFilterParams = {
                 with_cast: actor.id,
                 page: currentPage,
@@ -157,9 +165,11 @@ export const searchMovies = async (req, res, next) => {
                 include_adult: false
             };
 
-            if (isAdult !== 'true') {
+            if (!showAdultContent) {
                 actorFilterParams.certification_country = 'US';
                 actorFilterParams['certification.lte'] = 'PG-13';
+                 // Opsional: Tambahkan blokir genre juga di discover aktor biar konsisten
+                actorFilterParams.without_genres = "27,80,53,10749"; 
             }
 
             const moviesByActorRes = await axios.get(`${BASE_URL}/discover/movie`, tmdbParams(actorFilterParams));
