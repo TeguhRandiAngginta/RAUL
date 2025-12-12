@@ -20,7 +20,7 @@ export default function YearPage() {
 
     useEffect(() => {
         fetchMoviesByYear();
-    }, [year, page. isAdult]);
+    }, [year, page, isAdult]);
 
     const fetchMoviesByYear = async () => {
         setLoading(true);

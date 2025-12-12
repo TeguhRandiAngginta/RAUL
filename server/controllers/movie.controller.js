@@ -88,6 +88,14 @@ export const discoverMovies = async (req, res, next) => {
         if (!showAdultContent) {
             filterParams.certification_country = 'US';
             filterParams['certification.lte'] = 'PG-13'; 
+            // BLOKIR Genre Dewasa/Keras (Sama seperti logika Search)
+            const forbiddenGenres = "27,80,53,10749";
+            
+            // Jika user sedang memfilter salah satu genre ini, jangan gunakan without_genres
+            // (agar tidak konflik/hasil kosong). Tapi rating umur tetap membatasi.
+            if (!genre || !forbiddenGenres.includes(genre)) {
+                filterParams.without_genres = forbiddenGenres;
+            }
         }
         // Jika showAdultContent = true, tidak pasang filter certification, 
         // jadi film R (Dewasa) akan muncul otomatis.
