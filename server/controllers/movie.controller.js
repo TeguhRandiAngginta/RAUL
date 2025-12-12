@@ -32,24 +32,42 @@ export const getMovieDetails = async (req, res, next) => {
     try {
         const { id } = req.params;
 
-        // A. Coba ambil data bahasa Indonesia
-        const response = await axios.get(
+        //Ambil Detail Film & Video (Bahasa Indonesia)
+        // Kita HAPUS 'credits' dari append_to_response di sini karena kita mau ambil terpisah
+        const moviePromise = axios.get(
             `${BASE_URL}/movie/${id}`, 
-            tmdbParams({ append_to_response: 'credits,videos' })
+            tmdbParams({ append_to_response: 'videos' }) 
         );
 
-        let movieData = response.data;
+        //Ambil Credits/Pemeran (Bahasa Inggris)
+        // Kita request khusus endpoint credits dengan language 'en-US' agar nama aktor pakai huruf Latin
+        const creditsPromise = axios.get(
+            `${BASE_URL}/movie/${id}/credits`,
+            { 
+                params: { 
+                    api_key: API_KEY, 
+                    language: 'en-US' // Paksa nama aktor jadi Inggris/Internasional
+                } 
+            }
+        );
 
-        // B. LOGIKA FALLBACK: Jika overview kosong, ambil data bahasa Inggris
+        // Jalankan kedua request secara paralel (biar loading tetap cepat)
+        const [movieRes, creditsRes] = await Promise.all([moviePromise, creditsPromise]);
+
+        let movieData = movieRes.data;
+
+        //Masukkan data credits Inggris ke dalam object movie Indonesia
+        movieData.credits = creditsRes.data;
+
+        // LOGIKA FALLBACK
+        // Jika overview (sinopsis) Indonesia kosong, ambil dari Inggris
         if (!movieData.overview || movieData.overview.trim() === "") {
             try {
                 const englishResponse = await axios.get(`${BASE_URL}/movie/${id}`, {
-                    params: { api_key: API_KEY, language: 'en-US' } // Paksa bahasa Inggris
+                    params: { api_key: API_KEY, language: 'en-US' } 
                 });
                 
-                // Isi overview yang kosong dengan bahasa Inggris
                 movieData.overview = englishResponse.data.overview;
-                // Opsional: Isi tagline juga jika kosong
                 if (!movieData.tagline) movieData.tagline = englishResponse.data.tagline;
                 
             } catch (err) {
