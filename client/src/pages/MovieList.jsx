@@ -18,6 +18,7 @@ export default function MovieList() {
     const page = parseInt(searchParams.get("page")) || 1;
     const genre = searchParams.get("genre");
     const year = searchParams.get("year");
+    const isAdult = searchParams.get("isAdult");
 
     useEffect(() => {
         const fetchMovies = async () => {
@@ -27,18 +28,21 @@ export default function MovieList() {
                 
                 // Jika ada filter genre atau tahun, gunakan discover
                 if (genre || year) {
-                    const params = { page };
+                    const params = { 
+                        page,
+                        isAdult // Masukkan ke params discover
+                    };
                     if (genre) params.genre = genre;
                     if (year) params.year = year;
                     
                     data = await discoverMovies(params);
                 } else {
-                    // Jika tidak ada filter, ambil film populer
-                    data = await fetchPopularMovies(page);
+                    // Jika Popular, kirim juga isAdult
+                    data = await fetchPopularMovies(page, isAdult);
                 }
                 
                 setMovies(data.results || []);
-                setTotalPages(Math.min(data.total_pages || 1, 500)); // TMDB limit 500 pages
+                setTotalPages(Math.min(data.total_pages || 1, 500)); 
             } catch (error) {
                 console.error("Gagal ambil data film:", error);
                 setMovies([]);
@@ -49,12 +53,13 @@ export default function MovieList() {
         };
 
         fetchMovies();
-    }, [page, genre, year]);
+    }, [page, genre, year, isAdult]);
 
     const handlePageChange = (newPage) => {
         const params = { page: newPage.toString() };
         if (genre) params.genre = genre;
         if (year) params.year = year;
+        if (isAdult) params.isAdult = isAdult;
         setSearchParams(params);
     };
 

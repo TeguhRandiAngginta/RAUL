@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
+import api from '../api/api';
 import { Container, Row, Col, Card, Spinner, Breadcrumb, Badge } from 'react-bootstrap';
 import { StarFill, Calendar } from 'react-bootstrap-icons';
 import '../styles/GenrePage.css';
 
-const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
 
 const GENRES = {
@@ -32,6 +31,8 @@ const GENRES = {
 export default function GenrePage() {
     const { genreId } = useParams();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const isAdult = searchParams.get('isAdult');
     const [movies, setMovies] = useState([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
@@ -41,14 +42,18 @@ export default function GenrePage() {
 
     useEffect(() => {
         fetchMoviesByGenre();
-    }, [genreId, page]);
+    }, [genreId, page, isAdult]);
 
     const fetchMoviesByGenre = async () => {
         setLoading(true);
         try {
-            const res = await axios.get(
-                `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&language=id-ID&with_genres=${genreId}&page=${page}&sort_by=popularity.desc`
-            );
+            const res = await api.get('/movies/discover', {
+                params: {
+                    genre: genreId,
+                    page: page,
+                    isAdult: isAdult,
+                }
+            });
             setMovies(res.data.results);
             setTotalPages(res.data.total_pages > 500 ? 500 : res.data.total_pages);
         } catch (error) {
