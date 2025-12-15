@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../App.jsx";
 import api from "../api/api";
-import axios from "axios";
+// Hapus import axios karena kita pakai 'api' instance
 import toast from 'react-hot-toast';
 import {
     Container,
@@ -19,7 +19,7 @@ import { StarFill, Trash, ArrowLeft, Calendar, Film, PencilSquare } from "react-
 import { FaStar } from "react-icons/fa";
 import '../styles/MyReviews.css';
 
-const TMDB_API_KEY = "15050283b30a09e0018841fd5769b73b";
+// Hapus TMDB_API_KEY dari sini, biarkan backend yang urus
 const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
 
 export default function MyReviews() {
@@ -49,14 +49,18 @@ export default function MyReviews() {
     const fetchMyReviews = async () => {
         setLoading(true);
         try {
+            // 1. Ambil daftar review dari database sendiri
             const res = await api.get('/reviews/my-reviews');
             
+            // 2. Ambil detail film untuk setiap review
             const reviewsWithMovies = await Promise.all(
                 res.data.map(async (review) => {
                     try {
-                        const movieRes = await axios.get(
-                            `https://api.themoviedb.org/3/movie/${review.tmdbMovieId}?api_key=${TMDB_API_KEY}&language=id-ID`
-                        );
+                        // [PERBAIKAN DISINI]
+                        // Gunakan backend kita sendiri (/movies/:id)
+                        // Backend akan otomatis cek judul asing dan ganti ke Inggris jika perlu
+                        const movieRes = await api.get(`/movies/${review.tmdbMovieId}`);
+                        
                         return {
                             ...review,
                             movie: movieRes.data
@@ -299,6 +303,7 @@ export default function MyReviews() {
                                     <Card.Body className="d-flex flex-column p-4">
                                         {/* Movie Title */}
                                         <h5 className="movie-title text-light fw-bold mb-3">
+                                            {/* Judul akan otomatis bersih karena diambil dari backend */}
                                             {review.movie?.title || "Unknown Movie"}
                                         </h5>
 
