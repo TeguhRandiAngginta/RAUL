@@ -157,7 +157,7 @@ export default function MyReviews() {
     };
 
     const handleCardClick = (tmdbMovieId) => {
-        navigate(`/movies/${tmdbMovieId}`);
+        navigate(`/movie/${tmdbMovieId}`);
     };
 
     const getRatingColor = (rating) => {
