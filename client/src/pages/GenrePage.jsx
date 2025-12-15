@@ -28,6 +28,61 @@ const GENRES = {
     37: 'Western'
 };
 
+// === [BARU] Komponen Helper untuk Rating ===
+// Tampilannya 100% sama dengan kodemu, tapi bisa ambil rating dari DB
+const GenreMovieCard = ({ movie, onClick }) => {
+    const [rating, setRating] = useState({ avg: 0, count: 0 });
+
+    useEffect(() => {
+        if (!movie?.id) return;
+        const fetchRating = async () => {
+            try {
+                // Ambil rating asli dari database kamu
+                const res = await api.get(`/reviews/stats/${movie.id}`);
+                if (res.data) {
+                    setRating({ avg: res.data.average || 0, count: res.data.count || 0 });
+                }
+            } catch (err) { /* silent error */ }
+        };
+        fetchRating();
+    }, [movie.id]);
+
+    return (
+        <Card
+            className="movie-card"
+            onClick={() => onClick(movie.id)}
+        >
+            <div className="poster-wrapper">
+                <Card.Img
+                    variant="top"
+                    src={
+                        movie.poster_path
+                            ? `${TMDB_IMAGE_BASE}${movie.poster_path}`
+                            : 'https://via.placeholder.com/300x450?text=No+Image'
+                    }
+                    alt={movie.title}
+                />
+
+                {/* Rating Badge (Sekarang Dinamis) */}
+                <div className="rating-overlay">
+                    <StarFill size={12} className="me-1" />
+                    <span>{rating.avg > 0 ? rating.avg.toFixed(1) : '0.0'}</span>
+                </div>
+            </div>
+
+            <Card.Body className="p-2">
+                <h6 className="movie-title text-light mb-1">
+                    {movie.title}
+                </h6>
+                <div className="movie-year text-secondary">
+                    <Calendar size={10} className="me-1" />
+                    {movie.release_date?.slice(0, 4) || 'N/A'}
+                </div>
+            </Card.Body>
+        </Card>
+    );
+};
+
 export default function GenrePage() {
     const { genreId } = useParams();
     const navigate = useNavigate();
@@ -108,38 +163,8 @@ export default function GenrePage() {
                 <Row className="g-3 justify-content-start">
                     {movies.map((movie) => (
                         <Col xs={6} sm={4} md={3} lg={2} key={movie.id}>
-                            <Card
-                                className="movie-card"
-                                onClick={() => handleCardClick(movie.id)}
-                            >
-                                <div className="poster-wrapper">
-                                    <Card.Img
-                                        variant="top"
-                                        src={
-                                            movie.poster_path
-                                                ? `${TMDB_IMAGE_BASE}${movie.poster_path}`
-                                                : 'https://via.placeholder.com/300x450?text=No+Image'
-                                        }
-                                        alt={movie.title}
-                                    />
-
-                                    {/* Rating Badge */}
-                                    <div className="rating-overlay">
-                                        <StarFill size={12} className="me-1" />
-                                        <span>{movie.vote_average?.toFixed(1)}</span>
-                                    </div>
-                                </div>
-
-                                <Card.Body className="p-2">
-                                    <h6 className="movie-title text-light mb-1">
-                                        {movie.title}
-                                    </h6>
-                                    <div className="movie-year text-secondary">
-                                        <Calendar size={10} className="me-1" />
-                                        {movie.release_date?.slice(0, 4) || 'N/A'}
-                                    </div>
-                                </Card.Body>
-                            </Card>
+                            {/* Kita panggil komponen helper di sini */}
+                            <GenreMovieCard movie={movie} onClick={handleCardClick} />
                         </Col>
                     ))}
                 </Row>

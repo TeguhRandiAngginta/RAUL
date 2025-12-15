@@ -1,13 +1,55 @@
-// SearchResult.jsx
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Spinner, Card } from 'react-bootstrap';
 import api from '../api/api';
 import { ArrowLeft, Search as SearchIcon, PersonVideo, StarFill, Calendar } from 'react-bootstrap-icons';
 import '../styles/searchResult.css';
-import '../styles/GenrePage.css'; // 🔥 supaya .movie-card, .poster-wrapper, dll kepakai
+import '../styles/GenrePage.css';
 
 const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
+
+// === KOMPONEN KECIL UNTUK FETCH RATING ===
+// Ini persis seperti MovieCard tapi tampilannya sesuai permintaanmu
+const MovieCardWithRating = ({ movie, onClick }) => {
+    const [rating, setRating] = useState({ avg: 0, count: 0 });
+
+    useEffect(() => {
+        if (!movie?.id) return;
+        const fetchRating = async () => {
+            try {
+                const res = await api.get(`/reviews/stats/${movie.id}`);
+                if (res.data) {
+                    setRating({ avg: res.data.average || 0, count: res.data.count || 0 });
+                }
+            } catch (err) { /* silent error */ }
+        };
+        fetchRating();
+    }, [movie.id]);
+
+    return (
+        <Card className="movie-card" onClick={() => onClick(movie.id)}>
+            <div className="poster-wrapper">
+                <Card.Img
+                    variant="top"
+                    src={movie.poster_path ? `${TMDB_IMAGE_BASE}${movie.poster_path}` : 'https://via.placeholder.com/300x450?text=No+Image'}
+                    alt={movie.title}
+                />
+                <div className="rating-overlay">
+                    <StarFill size={12} className="me-1" />
+                    {/* Tampilkan Rating dari Database */}
+                    <span>{rating.avg > 0 ? rating.avg.toFixed(1) : '0.0'}</span>
+                </div>
+            </div>
+            <Card.Body className="p-2">
+                <h6 className="movie-title text-light mb-1">{movie.title}</h6>
+                <div className="movie-year text-secondary">
+                    <Calendar size={10} className="me-1" />
+                    {movie.release_date?.slice(0, 4) || 'N/A'}
+                </div>
+            </Card.Body>
+        </Card>
+    );
+};
 
 const SearchResult = () => {
     const [searchData, setSearchData] = useState({ resultsByTitle: [], resultsByActor: [], actorName: null });
@@ -71,7 +113,6 @@ const SearchResult = () => {
     return (
         <div className="genre-page">
             <Container className="py-4">
-                {/* Header ala search */}
                 <div className="search-header mb-4 d-flex flex-column gap-3">
                     <button className="search-back-btn" onClick={() => navigate(-1)}>
                         <ArrowLeft size={20} /> <span>Kembali</span>
@@ -110,36 +151,8 @@ const SearchResult = () => {
                                 <Row className="g-3 justify-content-start">
                                     {searchData.resultsByTitle.map((movie) => (
                                         <Col key={movie.id} xs={6} sm={4} md={3} lg={2}>
-                                            <Card
-                                                className="movie-card"
-                                                onClick={() => handleCardClick(movie.id)}
-                                            >
-                                                <div className="poster-wrapper">
-                                                    <Card.Img
-                                                        variant="top"
-                                                        src={
-                                                            movie.poster_path
-                                                                ? `${TMDB_IMAGE_BASE}${movie.poster_path}`
-                                                                : 'https://via.placeholder.com/300x450?text=No+Image'
-                                                        }
-                                                        alt={movie.title}
-                                                    />
-                                                    <div className="rating-overlay">
-                                                        <StarFill size={12} className="me-1" />
-                                                        <span>{movie.vote_average?.toFixed(1)}</span>
-                                                    </div>
-                                                </div>
-
-                                                <Card.Body className="p-2">
-                                                    <h6 className="movie-title text-light mb-1">
-                                                        {movie.title}
-                                                    </h6>
-                                                    <div className="movie-year text-secondary">
-                                                        <Calendar size={10} className="me-1" />
-                                                        {movie.release_date?.slice(0, 4) || 'N/A'}
-                                                    </div>
-                                                </Card.Body>
-                                            </Card>
+                                            {/* Panggil komponen custom kita */}
+                                            <MovieCardWithRating movie={movie} onClick={handleCardClick} />
                                         </Col>
                                     ))}
                                 </Row>
@@ -156,36 +169,8 @@ const SearchResult = () => {
                                 <Row className="g-3 justify-content-start">
                                     {searchData.resultsByActor.map((movie) => (
                                         <Col key={movie.id} xs={6} sm={4} md={3} lg={2}>
-                                            <Card
-                                                className="movie-card"
-                                                onClick={() => handleCardClick(movie.id)}
-                                            >
-                                                <div className="poster-wrapper">
-                                                    <Card.Img
-                                                        variant="top"
-                                                        src={
-                                                            movie.poster_path
-                                                                ? `${TMDB_IMAGE_BASE}${movie.poster_path}`
-                                                                : 'https://via.placeholder.com/300x450?text=No+Image'
-                                                        }
-                                                        alt={movie.title}
-                                                    />
-                                                    <div className="rating-overlay">
-                                                        <StarFill size={12} className="me-1" />
-                                                        <span>{movie.vote_average?.toFixed(1)}</span>
-                                                    </div>
-                                                </div>
-
-                                                <Card.Body className="p-2">
-                                                    <h6 className="movie-title text-light mb-1">
-                                                        {movie.title}
-                                                    </h6>
-                                                    <div className="movie-year text-secondary">
-                                                        <Calendar size={10} className="me-1" />
-                                                        {movie.release_date?.slice(0, 4) || 'N/A'}
-                                                    </div>
-                                                </Card.Body>
-                                            </Card>
+                                            {/* Panggil komponen custom kita */}
+                                            <MovieCardWithRating movie={movie} onClick={handleCardClick} />
                                         </Col>
                                     ))}
                                 </Row>
