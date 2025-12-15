@@ -195,7 +195,34 @@ export const updateReview = async (req, res, next) => {
         }
 };
 
+export const getMovieRatingStats = async (req, res, next) => {
+        try {
+                const tmdbMovieId = Number(req.params.movieId);
 
+                const stats = await reviewsCollection.aggregate([
+                        { $match: { tmdbMovieId } },
+                        {
+                                $group: {
+                                        _id: "$tmdbMovieId",
+                                        averageRating: { $avg: "$rating" },
+                                        totalVotes: { $sum: 1 }
+                                }
+                        }
+                ]).toArray();
+
+                if (stats.length > 0) {
+                        res.status(200).json({
+                                average: stats[0].averageRating,
+                                count: stats[0].totalVotes
+                        });
+                } else {
+                        res.status(200).json({ average: 0, count: 0 });
+                }
+        } catch (error) {
+                // Jika error, kembalikan 0 agar frontend tidak rusak
+                res.status(200).json({ average: 0, count: 0 });
+        }
+};
 export const deleteReview = async (req, res, next) => {
         try {
                 const reviewId = req.params.id;

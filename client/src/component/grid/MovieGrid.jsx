@@ -1,6 +1,37 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../../styles/movieGrid.css"; // Import CSS eksternal
+import "../../styles/movieGrid.css";
+
+// Komponen untuk fetch rating dari backend
+const MovieCardRating = ({ movieId }) => {
+    const [rating, setRating] = useState(0);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchRating = async () => {
+            try {
+                const res = await fetch(`http://localhost:5000/api/v1/reviews/stats/${movieId}`);
+                const data = await res.json();
+                setRating(data.average || 0);
+            } catch (err) {
+                console.error('Error fetching rating:', err);
+                setRating(0);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchRating();
+    }, [movieId]);
+
+    return (
+        <div className="movie-rating">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="#ffc107">
+                <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z" />
+            </svg>
+            <span>{loading ? '...' : rating.toFixed(1)}</span>
+        </div>
+    );
+};
 
 export default function MovieGrid() {
     const [movies, setMovies] = useState([]);
@@ -43,7 +74,6 @@ export default function MovieGrid() {
         fetchMovies();
     }, []);
 
-    // Auto-slide
     useEffect(() => {
         if (movies.length === 0) return;
         const interval = setInterval(() => {
@@ -79,7 +109,6 @@ export default function MovieGrid() {
 
     return (
         <>
-            {/* HERO SECTION */}
             <section className="hero-section">
                 <div className="hero-pattern"></div>
                 <div className="hero-content-wrapper">
@@ -90,7 +119,6 @@ export default function MovieGrid() {
                         </p>
                     </div>
 
-                    {/* 3 Info Cards */}
                     <div className="info-cards-container">
                         <div className="info-card">
                             <div className="icon-circle">
@@ -128,7 +156,6 @@ export default function MovieGrid() {
                         Jelajahi Sekarang
                     </button>
 
-                    {/* Scroll Indicator */}
                     <div className="scroll-indicator">
                         <div className="mouse"></div>
                         <p>Scroll untuk melihat film</p>
@@ -136,7 +163,6 @@ export default function MovieGrid() {
                 </div>
             </section>
 
-            {/* MOVIES SECTION */}
             <section id="popular" className="movies-section">
                 <div className="section-header">
                     <h2 className="section-title">🎬 Film Populer Mingguan</h2>
@@ -186,12 +212,7 @@ export default function MovieGrid() {
                                                 </div>
                                                 <div className="movie-info">
                                                     <h5 className="movie-title">{movie.title}</h5>
-                                                    <div className="movie-rating">
-                                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="#ffc107">
-                                                            <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z" />
-                                                        </svg>
-                                                        <span>{(movie.vote_average / 2).toFixed(1)}</span>
-                                                    </div>
+                                                    <MovieCardRating movieId={movie.id} />
                                                 </div>
                                             </div>
                                         </div>
@@ -206,7 +227,6 @@ export default function MovieGrid() {
                     )}
                 </div>
 
-                {/* Decorative Elements */}
                 <div className="section-decoration">
                     <div className="deco-circle deco-1"></div>
                     <div className="deco-circle deco-2"></div>

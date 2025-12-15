@@ -54,11 +54,11 @@ const StarRating = ({ rating, setRating, hover, setHover }) => {
     );
 };
 
-// helper: cek apakah string “Latin” (ASCII basic)
+// helper: cek apakah string “Latin” (ASCII basic - Huruf Inggris/Angka)
 const isAscii = (str = "") =>
-    /^[\u0000-\u007F\s'".,-]+$/.test(str);
+    /^[\u0000-\u007F\s'".,:;-]+$/.test(str);
 
-// pilih nama aktor versi alfabet Latin kalau tersedia
+// [FIX 1] Helper untuk memilih nama Aktor (Latin Only)
 const getActorName = (actor = {}) => {
     const name = actor.name || "";
     const originalName = actor.original_name || "";
@@ -66,6 +66,21 @@ const getActorName = (actor = {}) => {
     if (isAscii(name) && name.trim() !== "") return name;
     if (isAscii(originalName) && originalName.trim() !== "") return originalName;
     return name || originalName || "Unknown";
+};
+
+// [FIX 2] Helper baru untuk JUDUL FILM (Latin Only)
+const getMovieTitle = (movie) => {
+    if (!movie) return "";
+    const title = movie.title || "";
+    const original = movie.original_title || "";
+
+    // Prioritaskan title jika Latin/Inggris
+    if (isAscii(title) && title.trim() !== "") return title;
+    // Jika title bahasa dewa, coba original title
+    if (isAscii(original) && original.trim() !== "") return original;
+
+    // Jika dua-duanya aneh, terpaksa tampilkan title (atau bisa set default text)
+    return title;
 };
 
 export default function MovieDetail() {
@@ -160,7 +175,26 @@ export default function MovieDetail() {
 
         try {
             const res = await api.post("/reviews", reviewData);
+
+            // 1. Update list review di bawah
             setReviews([res.data, ...reviews]);
+
+            // 2. [FIX 3 - PENTING] Update statistik Rating Film secara realtime (Client-side calculation)
+            setMovie((prevMovie) => {
+                const oldVoteCount = prevMovie.vote_count || 0;
+                const oldVoteAverage = prevMovie.vote_average || 0;
+
+                // Rumus rata-rata baru: ((Rata2 Lama * Jumlah Lama) + Rating Baru) / (Jumlah Lama + 1)
+                const newVoteCount = oldVoteCount + 1;
+                const newVoteAverage = ((oldVoteAverage * oldVoteCount) + userRating) / newVoteCount;
+
+                return {
+                    ...prevMovie,
+                    vote_count: newVoteCount,
+                    vote_average: newVoteAverage
+                };
+            });
+
             handleCloseModal();
             toast.success("Review berhasil dikirim! 🎉", {
                 duration: 3000,
@@ -181,6 +215,7 @@ export default function MovieDetail() {
     };
 
     const handleToggleWatchlist = async () => {
+        // 1. Cek apakah user sudah login
         if (!user) {
             toast.error("Anda harus login untuk menambah watchlist", {
                 duration: 2000,
@@ -193,17 +228,40 @@ export default function MovieDetail() {
         }
 
         setWatchlistLoading(true);
+        
+        // 2. Siapkan request API
         const apiCall = api.post("/users/watchlist/toggle", {
             tmdbMovieId: numericMovieId,
         });
 
+        // 3. Eksekusi request dengan indikator loading (Toast)
         toast.promise(
             apiCall,
             {
                 loading: "Memperbarui watchlist...",
                 success: (res) => {
+                    // A. Update Global State (Redux) agar ikon bookmark berubah warna/checklist
                     dispatch(toggleWatchlistState(numericMovieId));
                     setWatchlistLoading(false);
+
+                    // B. [LOGIKA TAMBAHAN] Update Angka Watchlist di layar secara langsung
+                    setMovie((prev) => {
+                        // Ambil jumlah saat ini, default ke 0 jika belum ada
+                        const currentCount = prev.watchlistCount || 0;
+                        
+                        // Jika isMovieInWatchlist == true, berarti user sedang menghapus -> kurangi 1
+                        // Jika isMovieInWatchlist == false, berarti user sedang menambah -> tambah 1
+                        const newCount = isMovieInWatchlist 
+                            ? Math.max(0, currentCount - 1) // Jangan sampai minus
+                            : currentCount + 1;
+
+                        // Kembalikan object movie yang sudah diperbarui
+                        return {
+                            ...prev,
+                            watchlistCount: newCount
+                        };
+                    });
+
                     return res.data.message;
                 },
                 error: (err) => {
@@ -321,29 +379,34 @@ export default function MovieDetail() {
                             className="rounded shadow-lg movie-poster-img"
                         />
                         <div className="d-flex justify-content-center gap-3 mt-3">
+                            {/* BAGIAN INI DIUBAH */}
                             <div>
                                 <EyeFill size={20} className="text-success" />{" "}
-                                <small>{movie.popularity?.toFixed(0) || "0"}</small>
+                                {/* Tampilkan data watchlistCount dari backend */}
+                                <small>{movie.watchlistCount || "0"} Watchlists</small>
                             </div>
+                            {/* ----------------- */}
+
                             <div>
                                 <HeartFill size={18} className="text-danger" />{" "}
-                                <small>{movie.vote_count || "0"}</small>
+                                <small>{movie.vote_count || "0"} Reviews</small>
                             </div>
                             <div>
                                 <StarFill size={18} className="text-warning" />{" "}
-                                <small>{movie.vote_average?.toFixed(1) || "0"}</small>
+                                <small>{movie.vote_average ? movie.vote_average.toFixed(1) : "0.0"}</small>
                             </div>
                         </div>
                     </Col>
 
                     <Col md={8}>
-                        <h1 className="fw-bold">{movie.title}</h1>
+                        {/* [FIX 4] Gunakan helper getMovieTitle agar tidak muncul tulisan cina */}
+                        <h1 className="fw-bold">{getMovieTitle(movie)}</h1>
+
                         <p className="text-secondary mb-1">
                             {movie.release_date?.slice(0, 4)} • Directed by{" "}
                             <span className="text-info">{director}</span>
                         </p>
 
-                        {/* META FILM – pakai flex + gap supaya tidak nabrak */}
                         <div className="d-flex flex-wrap gap-3 small text-secondary mb-2">
                             <span>
                                 <strong>Durasi:</strong> {runtimeText}
@@ -356,7 +419,6 @@ export default function MovieDetail() {
                             </span>
                         </div>
 
-                        {/* Pemeran utama, nama sudah difilter ke alfabet Latin & bisa diklik */}
                         <p className="text-secondary mb-3">
                             <strong>Pemeran utama:</strong>{" "}
                             {mainCast.length === 0
@@ -423,7 +485,6 @@ export default function MovieDetail() {
                     </Col>
                 </Row>
 
-                {/* REVIEW SECTION */}
                 <Row className="mt-5">
                     <Col md={12}>
                         <h5 className="fw-bold text-light mb-3">Ulasan Pengguna</h5>
@@ -453,7 +514,6 @@ export default function MovieDetail() {
                 </Row>
             </Container>
 
-            {/* MODAL REVIEW – versi “bawaan” yang lebih tebal & rapi */}
             <Modal
                 show={showReviewModal}
                 onHide={handleCloseModal}
