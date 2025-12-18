@@ -45,7 +45,7 @@ function AppContent() {
   const fetchProfile = async () => {
     try {
       const res = await api.get('/users/profile');
-      setUser({ username: res.data.username });
+      setUser(res.data);
 
       const watchlistRes = await api.get('/users/watchlist/me');
       dispatch(setWatchlist(watchlistRes.data || []));
@@ -61,7 +61,7 @@ function AppContent() {
   const login = async (email, password) => {
     const res = await api.post('/auth/login', { email, password });
     if (res.status === 200) {
-      setUser({ username: res.data.username });
+      setUser(res.data);
 
       const watchlistRes = await api.get('/users/watchlist/me');
       dispatch(setWatchlist(watchlistRes.data || []));
