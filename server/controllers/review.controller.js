@@ -223,6 +223,41 @@ export const getMovieRatingStats = async (req, res, next) => {
                 res.status(200).json({ average: 0, count: 0 });
         }
 };
+
+//khusus admin
+export const getAllReviews = async (req, res, next) => {
+        try {
+                const reviews = await reviewsCollection.aggregate([
+                {
+                        $lookup: {
+                        from: 'users',
+                        localField: 'userId',
+                        foreignField: '_id',
+                        as: 'user'
+                        }
+                },
+                { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+                {
+                        $project: {
+                        _id: 1,
+                        tmdbMovieId: 1,
+                        rating: 1,
+                        comment: 1,
+                        createdAt: 1,
+                        'user.username': 1,
+                        'user.email': 1 
+                        }
+                },
+                { $sort: { createdAt: -1 } } // Urutkan dari yang terbaru
+                ]).toArray();
+
+                res.status(200).json(reviews);
+        } catch (error) {
+                console.error('Error getting all reviews:', error);
+                next({ status: 500, message: error.message });
+        }
+};
+
 export const deleteReview = async (req, res, next) => {
         try {
                 const reviewId = req.params.id;

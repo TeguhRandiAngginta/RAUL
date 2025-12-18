@@ -45,7 +45,7 @@ function AppContent() {
   const fetchProfile = async () => {
     try {
       const res = await api.get('/users/profile');
-      setUser({ username: res.data.username });
+      setUser(res.data);
 
       const watchlistRes = await api.get('/users/watchlist/me');
       dispatch(setWatchlist(watchlistRes.data || []));
@@ -61,7 +61,7 @@ function AppContent() {
   const login = async (email, password) => {
     const res = await api.post('/auth/login', { email, password });
     if (res.status === 200) {
-      setUser({ username: res.data.username });
+      setUser(res.data);
 
       const watchlistRes = await api.get('/users/watchlist/me');
       dispatch(setWatchlist(watchlistRes.data || []));
@@ -103,7 +103,7 @@ function AppContent() {
           <Route path="/signup" element={<SignUp />} />
           <Route path="/forget-password" element={<ForgetPassword />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/movie/:id" element={<MovieDetail />} />
           <Route path="/movie" element={<MovieList />} />
           <Route path="/search" element={<SearchResult />} />
