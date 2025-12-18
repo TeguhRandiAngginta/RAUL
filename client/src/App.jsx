@@ -103,7 +103,7 @@ function AppContent() {
           <Route path="/signup" element={<SignUp />} />
           <Route path="/forget-password" element={<ForgetPassword />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/movie/:id" element={<MovieDetail />} />
           <Route path="/movie" element={<MovieList />} />
           <Route path="/search" element={<SearchResult />} />
