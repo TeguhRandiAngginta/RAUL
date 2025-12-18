@@ -5,7 +5,9 @@ import "dotenv/config";
 import userRouter from "./routes/user.route.js";
 import authRouter from "./routes/auth.route.js";
 import movieRouter from "./routes/movie.route.js";
-import reviewRouter from "./routes/review.route.js"; //penambahan agar bisa ngirim review
+import reviewRouter from "./routes/review.route.js";
+import adminRouter from "./routes/admin.route.js";
+
 // Middlewares
 import { 
     errorHandler, 
@@ -41,6 +43,7 @@ app.use("/api/v1/auth", authLimiter, authRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/movies", movieRouter);
 app.use("/api/v1/reviews", reviewRouter);
+app.use("/api/v1/admin", adminRouter);
 
 // Default route
 app.get("/", (req, res) => {
