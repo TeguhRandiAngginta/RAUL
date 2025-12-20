@@ -23,7 +23,7 @@ router.get('/', authenticateToken, isAdmin ,getUsers);
 router.get('/:id',authenticateToken, isAdmin, getUser);
 
 //rute campuran admin dan user itu sendiri (logika di controller)
-router.patch('update/:id', authenticateToken, updateUser);
-router.delete('delete/:id', authenticateToken, isAdmin, deleteUser);
+router.patch('/update/:id', authenticateToken, updateUser);
+router.delete('/delete/:id', authenticateToken, isAdmin, deleteUser);
 
 export default router;
