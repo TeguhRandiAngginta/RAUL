@@ -1,7 +1,7 @@
 import React from 'react';
-import { Table, Button, Badge } from 'react-bootstrap';
+import { Table, Button, Badge, Form } from 'react-bootstrap';
 
-const UserTable = ({ users, onDelete }) => {
+const UserTable = ({ users, onDelete, onRoleChange }) => {
     return (
         <div className="table-responsive">
             <h4 className="mb-3">Daftar Pengguna</h4>
@@ -22,9 +22,21 @@ const UserTable = ({ users, onDelete }) => {
                             <td>{user.username}</td>
                             <td>{user.email}</td>
                             <td>
-                                <Badge bg={user.role === 'admin' ? 'danger' : 'secondary'}>
-                                    {user.role || 'user'}
-                                </Badge>
+                                {/* Dropdown Ganti Role */}
+                                <Form.Select 
+                                    size="sm"
+                                    value={user.role}
+                                    onChange={(e) => onRoleChange(user._id, e.target.value)}
+                                    style={{ 
+                                        width: '120px', 
+                                        backgroundColor: user.role === 'admin' ? '#dc3545' : '#6c757d',
+                                        color: 'white',
+                                        border: 'none'
+                                    }}
+                                >
+                                    <option value="customer">Customer</option>
+                                    <option value="admin">Admin</option>
+                                </Form.Select>
                             </td>
                             <td>
                                 {user.role !== 'admin' && (

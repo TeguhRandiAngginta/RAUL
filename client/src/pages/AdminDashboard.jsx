@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Container, Nav, Spinner, Alert } from 'react-bootstrap';
 import { useAuth } from '../App';
 import { useNavigate } from 'react-router-dom';
-import { fetchDashboardStats, fetchAllUsers, deleteUser, fetchAllReviews, deleteReview } from '../api/adminService';
+import { fetchDashboardStats, fetchAllUsers, deleteUser, fetchAllReviews, deleteReview, updateUserRole } from '../api/adminService';
 
 // Import Components
 import DashboardStats from '../component/admin/DashboardStats';
@@ -69,6 +69,28 @@ export default function AdminDashboard() {
         }
     };
 
+    // Handler Ganti Role User
+    const handleRoleChange = async (userId, newRole) => {
+        // Konfirmasi agar tidak sengaja terpencet
+        if (!window.confirm(`Ubah role user ini menjadi ${newRole}?`)) return;
+
+        try {
+            await updateUserRole(userId, newRole);
+            
+            // Update UI secara lokal (Optimistic UI) agar tidak perlu reload semua data
+            setUsers(prevUsers => prevUsers.map(user => 
+                user._id === userId ? { ...user, role: newRole } : user
+            ));
+            
+            alert(`Berhasil mengubah role menjadi ${newRole}`);
+        } catch (err) {
+            console.error(err);
+            alert(err.response?.data?.message || "Gagal mengubah role");
+            // Jika gagal, reload data agar sinkron kembali
+            loadData();
+        }
+    };
+
     // Handler Hapus Review
     const handleDeleteReview = async (id) => {
         if (window.confirm("Hapus review ini?")) {
@@ -81,6 +103,7 @@ export default function AdminDashboard() {
             }
         }
     };
+
 
     if (loading) {
         return (
@@ -121,7 +144,7 @@ export default function AdminDashboard() {
                     {activeTab === 'stats' && <DashboardStats stats={stats} />}
                     
                     {activeTab === 'users' && (
-                        <UserTable users={users} onDelete={handleDeleteUser} />
+                        <UserTable users={users} onDelete={handleDeleteUser} onRoleChange={handleRoleChange} />
                     )}
                     
                     {activeTab === 'reviews' && (
