@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../App.jsx";
-import api from "../api/api"; // Pakai api instance, bukan axios langsung
+import api from "../api/api"; 
+import axios from "axios";
 import toast from 'react-hot-toast';
 import {
     Container,
@@ -11,21 +12,21 @@ import {
     Spinner,
     Button,
     Badge,
+    Modal, // Import Modal
 } from "react-bootstrap";
-import { StarFill, Trash, ArrowLeft, Calendar, Bookmark } from "react-bootstrap-icons";
+import { StarFill, Trash, ArrowLeft, Calendar, Bookmark, ExclamationCircle } from "react-bootstrap-icons";
 import '../styles/Watchlist.css';
 
 const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
 
-// === [BARU] Komponen Helper untuk Card Watchlist ===
-const WatchlistCard = ({ movie, onClick, onRemove, isRemoving }) => {
+// === Komponen Helper untuk Card Watchlist ===
+const WatchlistCard = ({ movie, onClick, onRemove }) => {
     const [rating, setRating] = useState({ avg: 0, count: 0 });
 
     useEffect(() => {
         if (!movie?.id) return;
         const fetchRating = async () => {
             try {
-                // Ambil rating real-time dari database
                 const res = await api.get(`/reviews/stats/${movie.id}`);
                 if (res.data) {
                     setRating({ avg: res.data.average || 0, count: res.data.count || 0 });
@@ -49,7 +50,6 @@ const WatchlistCard = ({ movie, onClick, onRemove, isRemoving }) => {
             role="button"
             tabIndex={0}
         >
-            {/* Poster Section */}
             <div className="poster-container">
                 <Card.Img
                     variant="top"
@@ -64,7 +64,6 @@ const WatchlistCard = ({ movie, onClick, onRemove, isRemoving }) => {
 
                 <div className="poster-gradient" />
 
-                {/* Rating Badge (Dinamis dari DB) */}
                 <div
                     className="rating-badge"
                     style={{
@@ -77,29 +76,22 @@ const WatchlistCard = ({ movie, onClick, onRemove, isRemoving }) => {
                     </span>
                 </div>
 
-                {/* Delete Button */}
+                {/* Tombol Delete memicu fungsi onRemove dari Parent */}
                 <Button
                     variant="danger"
                     size="sm"
                     className="delete-button"
                     onClick={(e) => onRemove(movie.id, e)}
-                    disabled={isRemoving}
                 >
-                    {isRemoving ? (
-                        <Spinner animation="border" size="sm" />
-                    ) : (
-                        <Trash size={18} />
-                    )}
+                    <Trash size={18} />
                 </Button>
             </div>
 
             <Card.Body className="d-flex flex-column p-4">
-                {/* Movie Title */}
                 <h5 className="movie-title text-light fw-bold mb-3">
                     {movie.title}
                 </h5>
 
-                {/* Release Year & Date */}
                 <div className="review-date d-flex align-items-center mb-3 text-secondary">
                     <Calendar size={14} className="me-2" />
                     <span>
@@ -114,7 +106,6 @@ const WatchlistCard = ({ movie, onClick, onRemove, isRemoving }) => {
                 </div>
             </Card.Body>
 
-            {/* Bottom Accent */}
             <div
                 className="bottom-accent"
                 style={{
@@ -130,7 +121,11 @@ export default function Watchlist() {
     const navigate = useNavigate();
     const [watchlistMovies, setWatchlistMovies] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [removingId, setRemovingId] = useState(null);
+    
+    // State untuk Modal Hapus
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [movieToDelete, setMovieToDelete] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         if (!user) {
@@ -138,14 +133,12 @@ export default function Watchlist() {
             navigate("/signin");
             return;
         }
-
         fetchWatchlist();
     }, [user, navigate]);
 
     const fetchWatchlist = async () => {
         setLoading(true);
         try {
-            // 1. Ambil list ID dari watchlist user
             const res = await api.get('/users/watchlist/me');
             const movieIds = res.data;
 
@@ -155,11 +148,9 @@ export default function Watchlist() {
                 return;
             }
 
-            // 2. Ambil detail film dari Backend kita (agar judul bersih)
             const moviesWithDetails = await Promise.all(
                 movieIds.map(async (movieId) => {
                     try {
-                        // [PENTING] Pakai api backend sendiri, jangan axios ke TMDB langsung
                         const movieRes = await api.get(`/movies/${movieId}`);
                         return movieRes.data;
                     } catch (error) {
@@ -178,21 +169,39 @@ export default function Watchlist() {
         }
     };
 
-    const handleRemove = async (movieId, e) => {
+    // 1. Fungsi saat tombol sampah diklik (Hanya membuka modal)
+    const initiateDelete = (movieId, e) => {
         e.stopPropagation();
+        setMovieToDelete(movieId);
+        setShowDeleteModal(true);
+    };
 
-        if (!window.confirm("Hapus film dari watchlist?")) return;
+    // 2. Fungsi Eksekusi Hapus (Saat tombol "Hapus" di modal diklik)
+    const confirmDelete = async () => {
+        if (!movieToDelete) return;
 
-        setRemovingId(movieId);
+        setIsDeleting(true);
         try {
-            await api.post('/users/watchlist/toggle', { tmdbMovieId: movieId });
-            setWatchlistMovies(watchlistMovies.filter(movie => movie.id !== movieId));
+            await api.post('/users/watchlist/toggle', { tmdbMovieId: movieToDelete });
+            
+            // Update UI
+            setWatchlistMovies(watchlistMovies.filter(movie => movie.id !== movieToDelete));
             toast.success("Film dihapus dari watchlist");
+            setShowDeleteModal(false); // Tutup modal
         } catch (error) {
             console.error("Gagal hapus dari watchlist:", error);
             toast.error("Gagal menghapus dari watchlist");
         } finally {
-            setRemovingId(null);
+            setIsDeleting(false);
+            setMovieToDelete(null);
+        }
+    };
+
+    // Fungsi Tutup Modal
+    const handleCloseModal = () => {
+        if (!isDeleting) {
+            setShowDeleteModal(false);
+            setMovieToDelete(null);
         }
     };
 
@@ -219,15 +228,15 @@ export default function Watchlist() {
                 {/* Header Section */}
                 <Row className="mb-5">
                     <Col>
-                        <Button
-                            variant="outline-light"
+                        <Button 
+                            variant="outline-light" 
                             onClick={() => navigate(-1)}
                             className="back-button mb-4"
                         >
                             <ArrowLeft className="me-2" size={20} />
                             Kembali
                         </Button>
-
+                        
                         <div className="d-flex align-items-center mb-3">
                             <div className="accent-bar" />
                             <div>
@@ -257,8 +266,8 @@ export default function Watchlist() {
                         <p className="text-secondary mb-4 fs-5">
                             Tambahkan film yang ingin Anda tonton nanti!
                         </p>
-                        <Button
-                            variant="warning"
+                        <Button 
+                            variant="warning" 
                             onClick={() => navigate("/")}
                             className="explore-button px-5 py-3 fw-bold"
                         >
@@ -269,18 +278,68 @@ export default function Watchlist() {
                     <Row className="g-3 justify-content-start">
                         {watchlistMovies.map((movie) => (
                             <Col xs={12} sm={6} lg={4} xl={3} key={movie.id}>
-                                {/* Panggil komponen helper WatchlistCard */}
                                 <WatchlistCard
                                     movie={movie}
                                     onClick={handleCardClick}
-                                    onRemove={handleRemove}
-                                    isRemoving={removingId === movie.id}
+                                    onRemove={initiateDelete} // Panggil fungsi buka modal
                                 />
                             </Col>
                         ))}
                     </Row>
                 )}
             </Container>
+
+            {/* === MODAL KONFIRMASI HAPUS (Layout Centered) === */}
+            <Modal 
+                show={showDeleteModal} 
+                onHide={handleCloseModal}
+                centered // Ini agar modal muncul di tengah layar secara vertikal
+                backdrop="static" // Agar tidak keluar jika klik di luar (opsional, biar fokus)
+                keyboard={false}
+                className="delete-modal-custom" // Class khusus untuk CSS tambahan
+                data-bs-theme="dark"
+            >
+                <Modal.Header closeButton={!isDeleting} className="border-0 pb-0 justify-content-center">
+                    {/* Icon Besar di Tengah Atas (Opsional, gaya modern) */}
+                    <div className="w-100 text-center mb-2">
+                        <ExclamationCircle className="text-warning" size={60} />
+                    </div>
+                </Modal.Header>
+
+                <Modal.Body className="text-light text-center pt-0 px-4">
+                    <h4 className="fw-bold mb-3">Konfirmasi Hapus</h4>
+                    <p className="text-secondary mb-0">
+                        Apakah Anda yakin ingin menghapus film ini dari watchlist Anda?
+                    </p>
+                </Modal.Body>
+
+                <Modal.Footer className="border-0 d-flex flex-column gap-2 px-4 pb-4">
+                    {/* Tombol Disusun Vertikal (Stacked) agar "Pas di Tengah" */}
+                    <Button 
+                        variant="secondary" 
+                        onClick={handleCloseModal}
+                        disabled={isDeleting}
+                        className="w-100 py-2 fw-semibold rounded-pill" // w-100 bikin full width
+                    >
+                        Batal
+                    </Button>
+                    <Button 
+                        variant="danger" 
+                        onClick={confirmDelete}
+                        disabled={isDeleting}
+                        className="w-100 py-2 fw-bold rounded-pill"
+                    >
+                        {isDeleting ? (
+                            <>
+                                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2"/>
+                                Menghapus...
+                            </>
+                        ) : (
+                            "Ya, Hapus"
+                        )}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </div>
     );
 }
