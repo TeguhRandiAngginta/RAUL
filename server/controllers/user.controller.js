@@ -51,7 +51,7 @@ export const updateUser = async (req, res, next) => {
         if (!userInDb) return next({ status: 404, message: 'User tidak ditemukan' });
 
         // Pisahkan data password dari data lain
-        const { currentPassword, newPassword, ...otherData } = req.body;
+        const { currentPassword, newPassword, role, ...otherData } = req.body;
         
         // --- VALIDASI DUPLIKAT USERNAME & EMAIL ---
         // Cek jika user mencoba mengganti username
@@ -77,6 +77,15 @@ export const updateUser = async (req, res, next) => {
                 updatedAt: new Date().toISOString(),
             }
         };
+
+        // Logika khusus ganti role
+        if (role) {
+            if (currentUser.role === 'admin') {
+                updateData.$set.role = role; // Izinkan update role
+            } else {
+                return next({ status: 403, message: "Hanya admin bisa ganti role" });
+            }
+        }
 
         // 2. LOGIKA GANTI PASSWORD
         if (newPassword) {

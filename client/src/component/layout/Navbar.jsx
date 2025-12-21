@@ -200,6 +200,18 @@ const Header = () => {
                                     {user.username}
                                 </Dropdown.Toggle>
                                 <Dropdown.Menu className="profile-dropdown-menu">
+                                    {user.role === 'admin' && (
+                                        <>
+                                            <Dropdown.Item 
+                                                as={Link} 
+                                                to="/admin" 
+                                                className="text-black fw-bold"
+                                            >
+                                                Dashboard Admin
+                                            </Dropdown.Item>
+                                            <Dropdown.Divider />
+                                        </>
+                                    )}
                                     <Dropdown.Item as={Link} to="/profile">Profil</Dropdown.Item>
                                     <Dropdown.Item as={Link} to="/watchlist">Watchlist</Dropdown.Item>
                                     <Dropdown.Item as={Link} to="/my-reviews">Review</Dropdown.Item>

@@ -29,3 +29,9 @@ export const deleteReview = async (id) => {
     const res = await api.delete(`/reviews/${id}`);
     return res.data;
 };
+
+// Update Role User
+export const updateUserRole = async (userId, newRole) => {
+    const res = await api.patch(`/users/update/${userId}`, { role: newRole });
+    return res.data;
+};
