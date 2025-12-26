@@ -323,7 +323,7 @@ export default function MyReviews() {
                 className="edit-modal-custom"
             >
                 <Modal.Header closeButton={!isSaving} className="border-secondary bg-dark text-light">
-                    <Modal.Title className="fw-bold w-100 text-center">Edit Review</Modal.Title>
+                    <Modal.Title className="fw-bold w-100 text-center">Edit Ulasan</Modal.Title>
                 </Modal.Header>
                 <Form onSubmit={handleEditSubmit}>
                     <Modal.Body className="bg-dark text-light d-flex flex-column align-items-center py-4">

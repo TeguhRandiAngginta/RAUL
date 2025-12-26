@@ -38,7 +38,7 @@ export const securityHeaders = helmet({
 // Berlaku untuk semua request ke API
 export const globalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 menit
-    max: 100, // Maksimal 100 request per IP dalam 15 menit
+    max: 1002, // Maksimal 100 request per IP dalam 15 menit
     message: { 
         message: 'Terlalu banyak permintaan dari IP ini, silakan coba lagi nanti.' 
     },
