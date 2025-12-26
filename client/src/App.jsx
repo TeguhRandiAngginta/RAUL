@@ -80,7 +80,7 @@ function AppContent() {
     }
   };
 
-  const value = { user, login, logout, isLoading };
+  const value = { user, setUser,login, logout, isLoading };
 
   if (isLoading) {
     return (

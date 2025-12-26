@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { toggleWatchlistState } from "../redux/userSlice";
+import { Dropdown } from "react-bootstrap";
+import { ThreeDotsVertical, PencilSquare, Trash } from "react-bootstrap-icons";
 import api from "../api/api";
 import toast from "react-hot-toast";
 import { useAuth } from "../App.jsx";
@@ -68,6 +70,16 @@ const getActorName = (actor = {}) => {
     return name || originalName || "Unknown";
 };
 
+const formatDate = (dateStr) => {
+    if (!dateStr) return "";
+    return new Date(dateStr).toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+    });
+};
+
+
 // [FIX 2] Helper baru untuk JUDUL FILM (Latin Only)
 const getMovieTitle = (movie) => {
     if (!movie) return "";
@@ -102,6 +114,8 @@ export default function MovieDetail() {
 
     const numericMovieId = Number(id);
     const isMovieInWatchlist = watchlist.includes(numericMovieId);
+    const [editingReviewId, setEditingReviewId] = useState(null);
+
 
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -144,6 +158,24 @@ export default function MovieDetail() {
         setUserRating(0);
         setUserReview("");
         setHoverRating(0);
+    };
+
+    const handleEditReview = (review) => {
+        setUserRating(review.rating);
+        setUserReview(review.comment);
+        setEditingReviewId(review._id);
+        setShowReviewModal(true);
+    };
+    const handleDeleteReview = async (reviewId) => {
+        if (!window.confirm("Yakin ingin menghapus review ini?")) return;
+
+        try {
+            await api.delete(`/reviews/${reviewId}`);
+            setReviews((prev) => prev.filter((r) => r._id !== reviewId));
+            toast.success("Review berhasil dihapus");
+        } catch (error) {
+            toast.error("Gagal menghapus review");
+        }
     };
 
     const handleReviewSubmit = async (e) => {
@@ -228,7 +260,7 @@ export default function MovieDetail() {
         }
 
         setWatchlistLoading(true);
-        
+
         // 2. Siapkan request API
         const apiCall = api.post("/users/watchlist/toggle", {
             tmdbMovieId: numericMovieId,
@@ -248,10 +280,10 @@ export default function MovieDetail() {
                     setMovie((prev) => {
                         // Ambil jumlah saat ini, default ke 0 jika belum ada
                         const currentCount = prev.watchlistCount || 0;
-                        
+
                         // Jika isMovieInWatchlist == true, berarti user sedang menghapus -> kurangi 1
                         // Jika isMovieInWatchlist == false, berarti user sedang menambah -> tambah 1
-                        const newCount = isMovieInWatchlist 
+                        const newCount = isMovieInWatchlist
                             ? Math.max(0, currentCount - 1) // Jangan sampai minus
                             : currentCount + 1;
 
@@ -492,18 +524,45 @@ export default function MovieDetail() {
                             <p className="text-white">Belum ada ulasan. Jadilah yang pertama!</p>
                         ) : (
                             reviews.map((rev) => (
-                                <div key={rev._id} className="p-3 mb-3 rounded review-card">
-                                    <p className="fw-bold text-warning mb-1">
-                                        {rev.user?.username || "User"}{" "}
-                                        {[...Array(5)].map((_, index) => (
-                                            <StarFill
-                                                key={index}
-                                                size={16}
-                                                color={index < rev.rating ? "#ffc107" : "#555"}
-                                                className={index > 0 ? "ms-1" : ""}
-                                            />
-                                        ))}
+                                <div key={rev._id} className="p-3 mb-3 rounded review-card position-relative">
+                                    {/* === TITIK 3 MENU (EDIT & HAPUS) === */}
+                                    {user && (user._id === rev.user?._id || user.role === "admin") && (
+                                        <Dropdown className="review-menu" drop="end">
+                                            <Dropdown.Toggle
+                                                as="span"
+                                                className="review-menu-toggle"
+                                            >
+                                                <ThreeDotsVertical size={18} />
+                                            </Dropdown.Toggle>
+
+                                            <Dropdown.Menu align="end">
+                                                <Dropdown.Item onClick={() => handleEditReview(rev)}>
+                                                    <PencilSquare className="me-2" /> Edit
+                                                </Dropdown.Item>
+                                                <Dropdown.Item
+                                                    className="text-danger"
+                                                    onClick={() => handleDeleteReview(rev._id)}
+                                                >
+                                                    <Trash className="me-2" /> Hapus
+                                                </Dropdown.Item>
+                                            </Dropdown.Menu>
+                                        </Dropdown>
+                                    )}
+                                    {/* === AKHIR TITIK 3 MENU === */}
+
+                                    <p className="fw-bold text-warning mb-1 d-flex align-items-center gap-2">
+                                        <span>{rev.user?.displayName || rev.user?.username || "User"}</span>
+                                        <span className="review-stars">
+                                            {[...Array(5)].map((_, index) => (
+                                                <StarFill
+                                                    key={index}
+                                                    size={16}
+                                                    color={index < rev.rating ? "#ffc107" : "#555"}
+                                                />
+                                            ))}
+                                        </span>
                                     </p>
+
                                     <p className="text-light mb-0">
                                         {rev.comment || rev.text}
                                     </p>

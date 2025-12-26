@@ -3,7 +3,7 @@ import { Container, Row, Col, Form, Button, Spinner, Badge } from "react-bootstr
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { PencilSquare, StarFill, BookmarkFill } from "react-bootstrap-icons";
-import api from "../api/api"; 
+import api from "../api/api";
 import { useAuth } from "../App";
 import toast from "react-hot-toast";
 import "../styles/ProfilePage.css";
@@ -17,17 +17,17 @@ const getInitials = (name = "", email = "") => {
 };
 
 export default function ProfilePage() {
-    const { user } = useAuth();
+    const { user, setUser } = useAuth();
     const navigate = useNavigate();
     const { watchlist } = useSelector((state) => state.user);
 
     const [profile, setProfile] = useState(null);
-    const [editName, setEditName] = useState(""); 
-    
+    const [editName, setEditName] = useState("");
+
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [ratingCount, setRatingCount] = useState(0);
-    
+
     // State untuk batasan waktu (menit tersisa)
     const [minutesUntilUpdate, setMinutesUntilUpdate] = useState(0);
 
@@ -49,7 +49,7 @@ export default function ProfilePage() {
                     ...user,
                     ...profileRes.data,
                 };
-                
+
                 setProfile(mergedProfile);
                 setEditName(mergedProfile.displayName || mergedProfile.username || "");
 
@@ -57,12 +57,12 @@ export default function ProfilePage() {
                 if (mergedProfile.lastDisplayNameUpdate) {
                     const lastUpdate = new Date(mergedProfile.lastDisplayNameUpdate);
                     const now = new Date();
-                    
+
                     // Hitung selisih dalam milidetik
                     const diffMs = now - lastUpdate;
                     // Konversi ke menit
                     const diffMinutes = Math.floor(diffMs / (1000 * 60));
-                    
+
                     // Jika kurang dari 60 menit, hitung sisa waktu
                     if (diffMinutes < 60) {
                         setMinutesUntilUpdate(60 - diffMinutes);
@@ -94,7 +94,7 @@ export default function ProfilePage() {
 
     const handleSave = async (e) => {
         e.preventDefault();
-        
+
         if (!editName.trim()) {
             toast.error("Nama tampilan tidak boleh kosong");
             return;
@@ -108,29 +108,37 @@ export default function ProfilePage() {
         setSaving(true);
         try {
             const userId = profile?._id || profile?.id;
-            
+
             if (!userId) {
                 throw new Error("ID User tidak ditemukan di frontend.");
             }
 
-            const payload = { 
+            const payload = {
                 displayName: editName.trim(),
                 lastDisplayNameUpdate: new Date().toISOString() // Simpan waktu sekarang
             };
 
             const res = await api.patch(`/users/update/${userId}`, payload);
             const updated = res.data?.user || res.data || {};
-            
-            setProfile((prev) => ({ 
-                ...prev, 
-                ...updated, 
+
+            setProfile((prev) => ({
+                ...prev,
+                ...updated,
                 displayName: payload.displayName,
                 lastDisplayNameUpdate: payload.lastDisplayNameUpdate
             }));
-            
+
+            // Update juga di context global
+            setUser((prev) => ({
+                ...prev,
+                displayName: payload.displayName,
+                lastDisplayNameUpdate: payload.lastDisplayNameUpdate,
+            }));
+
+
             // Set timer langsung ke 60 menit setelah sukses
             setMinutesUntilUpdate(60);
-            
+
             toast.success("Profil berhasil diperbarui");
         } catch (err) {
             console.error("Gagal update profil:", err);
@@ -156,14 +164,14 @@ export default function ProfilePage() {
         ? new Date(joinedDateRaw).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })
         : "-";
 
-    let rawRole = profile.role || "user"; 
+    let rawRole = profile.role || "user";
     if (rawRole.toLowerCase() === "customer") rawRole = "user";
     const role = rawRole.toUpperCase();
 
     // Nama Header diambil dari PROFILE (bukan input form)
     const displayHeaderName = profile.displayName || profile.username || "User";
     const username = profile.username || profile.email?.split("@")[0] || "User";
-    
+
     const watchlistCount = Array.isArray(watchlist) ? watchlist.length : 0;
     const userId = profile._id || profile.id || "-";
 
@@ -230,11 +238,11 @@ export default function ProfilePage() {
                                             onChange={(e) => setEditName(e.target.value)}
                                             className="bg-dark text-light border-secondary"
                                             placeholder="Masukkan nama tampilan"
-                                            disabled={minutesUntilUpdate > 0} 
+                                            disabled={minutesUntilUpdate > 0}
                                         />
-                                        <Button 
-                                            type="submit" 
-                                            variant="warning" 
+                                        <Button
+                                            type="submit"
+                                            variant="warning"
                                             disabled={saving || minutesUntilUpdate > 0}
                                         >
                                             {saving ? "..." : <><PencilSquare className="me-1" /> Simpan</>}
@@ -254,12 +262,12 @@ export default function ProfilePage() {
                                 {/* Email (Read-only) */}
                                 <Form.Group className="mb-4">
                                     <Form.Label className="text-light fw-semibold">Email</Form.Label>
-                                    <Form.Control 
-                                        type="email" 
-                                        value={profile.email || ""} 
-                                        readOnly 
-                                        disabled 
-                                        className="bg-dark text-secondary border-secondary" 
+                                    <Form.Control
+                                        type="email"
+                                        value={profile.email || ""}
+                                        readOnly
+                                        disabled
+                                        className="bg-dark text-secondary border-secondary"
                                     />
                                 </Form.Group>
 
