@@ -218,3 +218,31 @@
     }
 }
 
+/* Styling khusus untuk Modal Delete agar rapi di tengah */
+.delete-modal-custom .modal-content {
+    border-radius: 20px;
+    /* Sudut lebih membulat */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: #1a1a1a;
+    /* Warna dark background */
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    /* Shadow biar "pop" */
+    overflow: hidden;
+}
+
+/* Memastikan dialog benar-benar di tengah pada mobile/desktop */
+.delete-modal-custom .modal-dialog {
+    display: flex;
+    align-items: center;
+    min-height: calc(100% - 1rem);
+}
+
+/* Mempercantik tombol close di pojok kanan atas */
+.delete-modal-custom .btn-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
+    filter: invert(1);
+    /* Agar tombol silang terlihat putih */
+}

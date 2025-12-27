@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../App.jsx";
 import api from "../api/api";
-// Hapus import axios karena kita pakai 'api' instance
 import toast from 'react-hot-toast';
 import {
     Container,
@@ -15,11 +14,11 @@ import {
     Modal,
     Form,
 } from "react-bootstrap";
-import { StarFill, Trash, ArrowLeft, Calendar, Film, PencilSquare } from "react-bootstrap-icons";
+import { StarFill, Trash, ArrowLeft, Calendar, Film, PencilSquare, ExclamationCircle } from "react-bootstrap-icons";
 import { FaStar } from "react-icons/fa";
 import '../styles/MyReviews.css';
+import '../styles/Watchlist.css'; // Kita reuse CSS modal dari watchlist agar konsisten
 
-// Hapus TMDB_API_KEY dari sini, biarkan backend yang urus
 const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
 
 export default function MyReviews() {
@@ -27,7 +26,11 @@ export default function MyReviews() {
     const navigate = useNavigate();
     const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [deletingId, setDeletingId] = useState(null);
+    
+    // State untuk Hapus Modal
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [reviewToDelete, setReviewToDelete] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // State untuk Edit Modal
     const [showEditModal, setShowEditModal] = useState(false);
@@ -35,6 +38,7 @@ export default function MyReviews() {
     const [editRating, setEditRating] = useState(0);
     const [editComment, setEditComment] = useState('');
     const [hoverRating, setHoverRating] = useState(0);
+    const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         if (!user) {
@@ -42,39 +46,25 @@ export default function MyReviews() {
             navigate("/signin");
             return;
         }
-
         fetchMyReviews();
     }, [user, navigate]);
 
     const fetchMyReviews = async () => {
         setLoading(true);
         try {
-            // 1. Ambil daftar review dari database sendiri
             const res = await api.get('/reviews/my-reviews');
             
-            // 2. Ambil detail film untuk setiap review
             const reviewsWithMovies = await Promise.all(
                 res.data.map(async (review) => {
                     try {
-                        // [PERBAIKAN DISINI]
-                        // Gunakan backend kita sendiri (/movies/:id)
-                        // Backend akan otomatis cek judul asing dan ganti ke Inggris jika perlu
                         const movieRes = await api.get(`/movies/${review.tmdbMovieId}`);
-                        
-                        return {
-                            ...review,
-                            movie: movieRes.data
-                        };
+                        return { ...review, movie: movieRes.data };
                     } catch (error) {
                         console.error(`Gagal fetch movie ${review.tmdbMovieId}:`, error);
-                        return {
-                            ...review,
-                            movie: null
-                        };
+                        return { ...review, movie: null };
                     }
                 })
             );
-
             setReviews(reviewsWithMovies);
         } catch (error) {
             console.error("Gagal ambil review:", error);
@@ -84,6 +74,7 @@ export default function MyReviews() {
         }
     };
 
+    // --- LOGIKA EDIT ---
     const handleEdit = (review, e) => {
         e.stopPropagation();
         setEditingReview(review);
@@ -96,30 +87,21 @@ export default function MyReviews() {
         e.preventDefault();
         
         if (editRating === 0) {
-            toast.error("Harap isi rating bintang!", {
-                duration: 3000,
-                position: 'top-center',
-                style: { background: '#333', color: '#fff' },
-            });
+            toast.error("Harap isi rating bintang!");
             return;
         }
-
         if (!editComment.trim()) {
-            toast.error("Harap isi ulasan Anda!", {
-                duration: 3000,
-                position: 'top-center',
-                style: { background: '#333', color: '#fff' },
-            });
+            toast.error("Harap isi ulasan Anda!");
             return;
         }
 
+        setIsSaving(true);
         try {
             await api.put(`/reviews/${editingReview._id}`, {
                 rating: editRating,
                 comment: editComment,
             });
 
-            // Update review di state
             setReviews(reviews.map(rev => 
                 rev._id === editingReview._id 
                     ? { ...rev, rating: editRating, comment: editComment }
@@ -127,36 +109,44 @@ export default function MyReviews() {
             ));
 
             setShowEditModal(false);
-            toast.success('Review berhasil diupdate! 🎉', {
-                duration: 3000,
-                position: 'top-center',
-                style: { background: '#333', color: '#fff' },
-            });
+            toast.success('Review berhasil diupdate! 🎉');
         } catch (error) {
             console.error("Gagal update review:", error);
-            toast.error(error.response?.data?.message || "Gagal mengupdate review", {
-                duration: 4000,
-                position: 'top-center',
-                style: { background: '#333', color: '#fff' },
-            });
+            toast.error(error.response?.data?.message || "Gagal mengupdate review");
+        } finally {
+            setIsSaving(false);
         }
     };
 
-    const handleDelete = async (reviewId, e) => {
+    // --- LOGIKA HAPUS (MODAL) ---
+    const initiateDelete = (reviewId, e) => {
         e.stopPropagation();
-        
-        if (!window.confirm("Yakin ingin menghapus review ini?")) return;
+        setReviewToDelete(reviewId);
+        setShowDeleteModal(true);
+    };
 
-        setDeletingId(reviewId);
+    const confirmDelete = async () => {
+        if (!reviewToDelete) return;
+
+        setIsDeleting(true);
         try {
-            await api.delete(`/reviews/${reviewId}`);
-            setReviews(reviews.filter(rev => rev._id !== reviewId));
+            await api.delete(`/reviews/${reviewToDelete}`);
+            setReviews(reviews.filter(rev => rev._id !== reviewToDelete));
             toast.success("Review berhasil dihapus!");
+            setShowDeleteModal(false);
         } catch (error) {
             console.error("Gagal hapus review:", error);
             toast.error(error.response?.data?.message || "Gagal menghapus review");
         } finally {
-            setDeletingId(null);
+            setIsDeleting(false);
+            setReviewToDelete(null);
+        }
+    };
+
+    const handleCloseDeleteModal = () => {
+        if (!isDeleting) {
+            setShowDeleteModal(false);
+            setReviewToDelete(null);
         }
     };
 
@@ -246,19 +236,16 @@ export default function MyReviews() {
                                     role="button"
                                     tabIndex={0}
                                 >
-                                    {/* Poster Section */}
                                     <div className="poster-container">
                                         <Card.Img
                                             variant="top"
-                                            src={
-                                                review.movie?.poster_path
+                                            src={review.movie?.poster_path
                                                     ? `${TMDB_IMAGE_BASE}${review.movie.poster_path}`
                                                     : "https://via.placeholder.com/500x750?text=No+Image"
                                             }
                                             alt={review.movie?.title || "Movie"}
                                             className="poster-image"
                                         />
-                                        
                                         <div className="poster-gradient" />
                                         
                                         {/* Rating Badge */}
@@ -284,42 +271,29 @@ export default function MyReviews() {
                                             <PencilSquare size={18} />
                                         </Button>
 
-                                        {/* Delete Button */}
+                                        {/* Delete Button (Memicu Modal) */}
                                         <Button
                                             variant="danger"
                                             size="sm"
                                             className="delete-button"
-                                            onClick={(e) => handleDelete(review._id, e)}
-                                            disabled={deletingId === review._id}
+                                            onClick={(e) => initiateDelete(review._id, e)}
                                         >
-                                            {deletingId === review._id ? (
-                                                <Spinner animation="border" size="sm" />
-                                            ) : (
-                                                <Trash size={18} />
-                                            )}
+                                            <Trash size={18} />
                                         </Button>
                                     </div>
 
                                     <Card.Body className="d-flex flex-column p-4">
-                                        {/* Movie Title */}
                                         <h5 className="movie-title text-light fw-bold mb-3">
-                                            {/* Judul akan otomatis bersih karena diambil dari backend */}
                                             {review.movie?.title || "Unknown Movie"}
                                         </h5>
-
-                                        {/* Date */}
                                         <div className="review-date d-flex align-items-center mb-3 text-secondary">
                                             <Calendar size={14} className="me-2" />
                                             <span>
                                                 {new Date(review.createdAt).toLocaleDateString('id-ID', {
-                                                    day: 'numeric',
-                                                    month: 'short',
-                                                    year: 'numeric'
+                                                    day: 'numeric', month: 'short', year: 'numeric'
                                                 })}
                                             </span>
                                         </div>
-
-                                        {/* Review Comment */}
                                         <div className="comment-box">
                                             <Card.Text className="comment-text text-light mb-0">
                                                 "{review.comment}"
@@ -327,7 +301,6 @@ export default function MyReviews() {
                                         </div>
                                     </Card.Body>
 
-                                    {/* Bottom Accent */}
                                     <div 
                                         className="bottom-accent"
                                         style={{
@@ -341,25 +314,23 @@ export default function MyReviews() {
                 )}
             </Container>
 
-            {/* Edit Modal */}
+            {/* === MODAL EDIT REVIEW === */}
             <Modal
                 show={showEditModal}
-                onHide={() => setShowEditModal(false)}
+                onHide={() => !isSaving && setShowEditModal(false)}
                 centered
                 data-bs-theme="dark"
+                className="edit-modal-custom"
             >
-                <Modal.Header closeButton className="bg-dark text-light border-secondary">
-                    <Modal.Title className="w-100 text-center fw-bold">
-                        Edit Review
-                    </Modal.Title>
+                <Modal.Header closeButton={!isSaving} className="border-secondary bg-dark text-light">
+                    <Modal.Title className="fw-bold w-100 text-center">Edit Ulasan</Modal.Title>
                 </Modal.Header>
-
                 <Form onSubmit={handleEditSubmit}>
-                    <Modal.Body className="bg-dark text-light d-flex flex-column align-items-center">
-                        <p className="text-secondary mb-2">Rating Anda</p>
+                    <Modal.Body className="bg-dark text-light d-flex flex-column align-items-center py-4">
+                        <p className="text-secondary mb-3">Ubah rating Anda</p>
                         
-                        {/* Star Rating */}
-                        <div className="d-flex justify-content-center mb-3">
+                        {/* Star Rating Input */}
+                        <div className="d-flex justify-content-center mb-4">
                             {[...Array(5)].map((_, index) => {
                                 const ratingValue = index + 1;
                                 return (
@@ -370,58 +341,107 @@ export default function MyReviews() {
                                             value={ratingValue}
                                             onClick={() => setEditRating(ratingValue)}
                                             style={{ display: "none" }}
+                                            disabled={isSaving}
                                         />
                                         <FaStar
-                                            size={40}
-                                            color={ratingValue <= (hoverRating || editRating) ? "#ffc107" : "#e4e5e9"}
-                                            onMouseEnter={() => setHoverRating(ratingValue)}
-                                            onMouseLeave={() => setHoverRating(0)}
-                                            className="mx-1"
+                                            size={32}
+                                            color={ratingValue <= (hoverRating || editRating) ? "#ffc107" : "#4b5563"}
+                                            onMouseEnter={() => !isSaving && setHoverRating(ratingValue)}
+                                            onMouseLeave={() => !isSaving && setHoverRating(0)}
+                                            className="mx-1 transition-colors"
                                         />
                                     </label>
                                 );
                             })}
                         </div>
 
-                        <Form.Group className="mt-3 w-100 text-center d-flex flex-column align-items-center">
-                            <Form.Label className="fw-semibold text-light mb-2">
-                                Ulasan Anda
-                            </Form.Label>
+                        <Form.Group className="w-100 px-3">
+                            <Form.Label className="text-light fw-semibold">Komentar Anda</Form.Label>
                             <Form.Control
                                 as="textarea"
                                 rows={4}
-                                placeholder="Bagikan pendapat Anda tentang film ini..."
+                                placeholder="Tulis ulang ulasan Anda..."
                                 value={editComment}
                                 onChange={(e) => setEditComment(e.target.value)}
-                                className="bg-dark text-light border-secondary rounded p-3"
-                                style={{
-                                    width: "90%",
-                                    maxWidth: "500px",
-                                    resize: "none",
-                                }}
+                                className="bg-dark text-light border-secondary"
+                                style={{ resize: "none" }}
+                                disabled={isSaving}
                             />
                         </Form.Group>
                     </Modal.Body>
-
-                    <Modal.Footer className="bg-dark text-light border-secondary px-4 py-3">
-                        <div className="d-flex justify-content-between w-100 gap-3">
-                            <Button
-                                variant="outline-secondary"
+                    <Modal.Footer className="bg-dark border-secondary px-4 py-3">
+                        <div className="d-flex w-100 gap-2">
+                            <Button 
+                                variant="outline-secondary" 
                                 onClick={() => setShowEditModal(false)}
-                                className="px-4 py-2"
+                                className="w-100"
+                                disabled={isSaving}
                             >
                                 Batal
                             </Button>
-                            <Button
-                                variant="warning"
+                            <Button 
+                                variant="warning" 
                                 type="submit"
-                                className="text-dark fw-bold px-4 py-2"
+                                className="w-100 fw-bold"
+                                disabled={isSaving}
                             >
-                                Update Review
+                                {isSaving ? (
+                                    <><Spinner size="sm" className="me-2"/>Menyimpan...</>
+                                ) : "Simpan Perubahan"}
                             </Button>
                         </div>
                     </Modal.Footer>
                 </Form>
+            </Modal>
+
+            {/* === MODAL KONFIRMASI HAPUS (Reuse Style Watchlist) === */}
+            <Modal 
+                show={showDeleteModal} 
+                onHide={handleCloseDeleteModal}
+                centered
+                backdrop="static"
+                keyboard={false}
+                className="delete-modal-custom"
+                data-bs-theme="dark"
+            >
+                <Modal.Header closeButton={!isDeleting} className="border-0 pb-0 justify-content-center">
+                    <div className="w-100 text-center mb-2">
+                        <ExclamationCircle className="text-warning" size={60} />
+                    </div>
+                </Modal.Header>
+
+                <Modal.Body className="text-light text-center pt-0 px-4">
+                    <h4 className="fw-bold mb-3">Hapus Review?</h4>
+                    <p className="text-secondary mb-0">
+                        Apakah Anda yakin ingin menghapus ulasan ini? Tindakan ini tidak dapat dibatalkan.
+                    </p>
+                </Modal.Body>
+
+                <Modal.Footer className="border-0 d-flex flex-column gap-2 px-4 pb-4">
+                    <Button 
+                        variant="secondary" 
+                        onClick={handleCloseDeleteModal}
+                        disabled={isDeleting}
+                        className="w-100 py-2 fw-semibold rounded-pill"
+                    >
+                        Batal
+                    </Button>
+                    <Button 
+                        variant="danger" 
+                        onClick={confirmDelete}
+                        disabled={isDeleting}
+                        className="w-100 py-2 fw-bold rounded-pill"
+                    >
+                        {isDeleting ? (
+                            <>
+                                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2"/>
+                                Menghapus...
+                            </>
+                        ) : (
+                            "Ya, Hapus Review"
+                        )}
+                    </Button>
+                </Modal.Footer>
             </Modal>
         </div>
     );

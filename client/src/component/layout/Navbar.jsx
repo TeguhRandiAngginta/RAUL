@@ -197,7 +197,7 @@ const Header = () => {
                                     id="user-dropdown"
                                     className="btn login-btn user-dropdown-btn text-decoration-none"
                                 >
-                                    {user.username}
+                                    {user.displayName || user.username}
                                 </Dropdown.Toggle>
                                 <Dropdown.Menu className="profile-dropdown-menu">
                                     {user.role === 'admin' && (

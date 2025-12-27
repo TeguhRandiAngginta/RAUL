@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Container, Row, Col, Form, Button, Spinner, Badge } from "react-bootstrap";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { PencilSquare, StarFill, BookmarkFill, ShieldCheck } from "react-bootstrap-icons";
-import api from "../api/api"; 
+import { PencilSquare, StarFill, BookmarkFill } from "react-bootstrap-icons";
+import api from "../api/api";
 import { useAuth } from "../App";
 import toast from "react-hot-toast";
 import "../styles/ProfilePage.css";
@@ -17,16 +17,19 @@ const getInitials = (name = "", email = "") => {
 };
 
 export default function ProfilePage() {
-    const { user } = useAuth();
+    const { user, setUser } = useAuth();
     const navigate = useNavigate();
     const { watchlist } = useSelector((state) => state.user);
 
     const [profile, setProfile] = useState(null);
-    const [displayName, setDisplayName] = useState("");
-    const [adultContent, setAdultContent] = useState(false);
+    const [editName, setEditName] = useState("");
+
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [ratingCount, setRatingCount] = useState(0);
+
+    // State untuk batasan waktu (menit tersisa)
+    const [minutesUntilUpdate, setMinutesUntilUpdate] = useState(0);
 
     useEffect(() => {
         if (!user) {
@@ -46,18 +49,32 @@ export default function ProfilePage() {
                     ...user,
                     ...profileRes.data,
                 };
-                
+
                 setProfile(mergedProfile);
-                setDisplayName(mergedProfile.displayName || mergedProfile.username || "");
-                setAdultContent(mergedProfile.adultContent || false);
+                setEditName(mergedProfile.displayName || mergedProfile.username || "");
+
+                // --- LOGIKA BATASAN 1 JAM (60 Menit) ---
+                if (mergedProfile.lastDisplayNameUpdate) {
+                    const lastUpdate = new Date(mergedProfile.lastDisplayNameUpdate);
+                    const now = new Date();
+
+                    // Hitung selisih dalam milidetik
+                    const diffMs = now - lastUpdate;
+                    // Konversi ke menit
+                    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+
+                    // Jika kurang dari 60 menit, hitung sisa waktu
+                    if (diffMinutes < 60) {
+                        setMinutesUntilUpdate(60 - diffMinutes);
+                    } else {
+                        setMinutesUntilUpdate(0);
+                    }
+                }
+                // ---------------------------------------
 
                 const reviewsData = reviewsRes.data;
                 let count = 0;
                 if (Array.isArray(reviewsData)) count = reviewsData.length;
-                else if (reviewsData && Array.isArray(reviewsData.reviews)) count = reviewsData.reviews.length;
-                else if (reviewsData && Array.isArray(reviewsData.data)) count = reviewsData.data.length;
-                else if (reviewsData && Array.isArray(reviewsData.results)) count = reviewsData.results.length;
-                
                 setRatingCount(count);
 
             } catch (err) {
@@ -65,8 +82,7 @@ export default function ProfilePage() {
                 toast.error("Gagal memuat data profil");
                 if (user) {
                     setProfile(user);
-                    setDisplayName(user.displayName || user.username || "");
-                    setAdultContent(user.adultContent || false);
+                    setEditName(user.displayName || user.username || "");
                 }
             } finally {
                 setLoading(false);
@@ -78,51 +94,57 @@ export default function ProfilePage() {
 
     const handleSave = async (e) => {
         e.preventDefault();
-        if (!displayName.trim()) {
+
+        if (!editName.trim()) {
             toast.error("Nama tampilan tidak boleh kosong");
             return;
         }
+
+        if (minutesUntilUpdate > 0) {
+            toast.error(`Anda baru bisa mengganti nama lagi dalam ${minutesUntilUpdate} menit.`);
+            return;
+        }
+
         setSaving(true);
         try {
-            // ✅ FIX: Gunakan endpoint yang benar dengan user ID
-            const userId = profile._id || profile.id;
-            const res = await api.patch(`/users/update/${userId}`, { 
-                displayName: displayName.trim(),
-                adultContent: adultContent
-            });
-            
-            const updated = res.data || {};
-            setProfile((prev) => ({ 
-                ...prev, 
-                ...updated, 
-                displayName: updated.displayName || displayName.trim(),
-                adultContent: updated.adultContent !== undefined ? updated.adultContent : adultContent
+            const userId = profile?._id || profile?.id;
+
+            if (!userId) {
+                throw new Error("ID User tidak ditemukan di frontend.");
+            }
+
+            const payload = {
+                displayName: editName.trim(),
+                lastDisplayNameUpdate: new Date().toISOString() // Simpan waktu sekarang
+            };
+
+            const res = await api.patch(`/users/update/${userId}`, payload);
+            const updated = res.data?.user || res.data || {};
+
+            setProfile((prev) => ({
+                ...prev,
+                ...updated,
+                displayName: payload.displayName,
+                lastDisplayNameUpdate: payload.lastDisplayNameUpdate
             }));
-            
+
+            // Update juga di context global
+            setUser((prev) => ({
+                ...prev,
+                displayName: payload.displayName,
+                lastDisplayNameUpdate: payload.lastDisplayNameUpdate,
+            }));
+
+
+            // Set timer langsung ke 60 menit setelah sukses
+            setMinutesUntilUpdate(60);
+
             toast.success("Profil berhasil diperbarui");
         } catch (err) {
             console.error("Gagal update profil:", err);
             toast.error(err.response?.data?.message || "Gagal menyimpan profil");
         } finally {
             setSaving(false);
-        }
-    };
-
-    const handleAdultContentToggle = async (checked) => {
-        setAdultContent(checked);
-        
-        // Auto-save adult content preference
-        try {
-            const userId = profile._id || profile.id;
-            await api.patch(`/users/update/${userId}`, { 
-                adultContent: checked 
-            });
-            
-            toast.success(checked ? "Konten dewasa diaktifkan" : "Konten dewasa dinonaktifkan");
-        } catch (err) {
-            console.error("Gagal update preferensi:", err);
-            setAdultContent(!checked); // Rollback jika gagal
-            toast.error("Gagal mengubah preferensi");
         }
     };
 
@@ -137,18 +159,19 @@ export default function ProfilePage() {
 
     if (!profile) return null;
 
-    const joinedDateRaw = profile.createdAt || profile.created_at || profile.joinedAt || (user && user.createdAt);
+    const joinedDateRaw = profile.createdAt || profile.created_at || (user && user.createdAt);
     const joinedDate = joinedDateRaw
         ? new Date(joinedDateRaw).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })
-        : "Tanggal tidak tersedia";
+        : "-";
 
-    let rawRole = profile.role || "user"; 
-    if (rawRole.toLowerCase() === "customer") {
-        rawRole = "user";
-    }
+    let rawRole = profile.role || "user";
+    if (rawRole.toLowerCase() === "customer") rawRole = "user";
     const role = rawRole.toUpperCase();
 
+    // Nama Header diambil dari PROFILE (bukan input form)
+    const displayHeaderName = profile.displayName || profile.username || "User";
     const username = profile.username || profile.email?.split("@")[0] || "User";
+
     const watchlistCount = Array.isArray(watchlist) ? watchlist.length : 0;
     const userId = profile._id || profile.id || "-";
 
@@ -157,13 +180,13 @@ export default function ProfilePage() {
             <header className="profile-header">
                 <div className="profile-header-left">
                     <div className="profile-avatar-large">
-                        {getInitials(displayName || username, profile.email)}
+                        {getInitials(displayHeaderName, profile.email)}
                     </div>
                     <div className="profile-header-text">
-                        <h1 className="profile-username">{displayName || username}</h1>
+                        <h1 className="profile-username">{displayHeaderName}</h1>
                         <div className="profile-meta-line">
                             <span className="profile-joined">
-                                {joinedDate !== "Tanggal tidak tersedia" ? `Bergabung ${joinedDate}` : joinedDate}
+                                Bergabung {joinedDate}
                             </span>
                             <Badge bg={role === "ADMIN" ? "danger" : "secondary"} className="ms-2">
                                 {role}
@@ -211,54 +234,41 @@ export default function ProfilePage() {
                                     <div className="d-flex gap-2">
                                         <Form.Control
                                             type="text"
-                                            value={displayName}
-                                            onChange={(e) => setDisplayName(e.target.value)}
+                                            value={editName}
+                                            onChange={(e) => setEditName(e.target.value)}
                                             className="bg-dark text-light border-secondary"
                                             placeholder="Masukkan nama tampilan"
+                                            disabled={minutesUntilUpdate > 0}
                                         />
-                                        <Button type="submit" variant="warning" disabled={saving}>
-                                            {saving ? "Menyimpan..." : <><PencilSquare className="me-1" /> Simpan</>}
+                                        <Button
+                                            type="submit"
+                                            variant="warning"
+                                            disabled={saving || minutesUntilUpdate > 0}
+                                        >
+                                            {saving ? "..." : <><PencilSquare className="me-1" /> Simpan</>}
                                         </Button>
                                     </div>
-                                    <Form.Text className="text-muted">
-                                        Nama ini akan muncul di review dan profil publik Anda.
-                                    </Form.Text>
+                                    {minutesUntilUpdate > 0 ? (
+                                        <Form.Text className="text-danger">
+                                            Anda dapat mengganti nama lagi dalam {minutesUntilUpdate} menit.
+                                        </Form.Text>
+                                    ) : (
+                                        <Form.Text className="text-muted">
+                                            Nama ini muncul di profil publik. (Batas ganti: 1 jam sekali)
+                                        </Form.Text>
+                                    )}
                                 </Form.Group>
 
                                 {/* Email (Read-only) */}
                                 <Form.Group className="mb-4">
                                     <Form.Label className="text-light fw-semibold">Email</Form.Label>
-                                    <Form.Control 
-                                        type="email" 
-                                        value={profile.email || ""} 
-                                        readOnly 
-                                        disabled 
-                                        className="bg-dark text-secondary border-secondary" 
+                                    <Form.Control
+                                        type="email"
+                                        value={profile.email || ""}
+                                        readOnly
+                                        disabled
+                                        className="bg-dark text-secondary border-secondary"
                                     />
-                                </Form.Group>
-
-                                {/* ✅ ADULT CONTENT TOGGLE */}
-                                <Form.Group className="mb-4">
-                                    <div className="d-flex align-items-center justify-content-between p-3 rounded" style={{ background: 'rgba(255, 255, 255, 0.05)' }}>
-                                        <div>
-                                            <div className="d-flex align-items-center mb-1">
-                                                <ShieldCheck className="me-2 text-warning" size={20} />
-                                                <Form.Label className="text-light fw-semibold mb-0">
-                                                    Konten Dewasa
-                                                </Form.Label>
-                                            </div>
-                                            <Form.Text className="text-muted">
-                                                Tampilkan film dengan rating dewasa (18+)
-                                            </Form.Text>
-                                        </div>
-                                        <Form.Check 
-                                            type="switch"
-                                            id="adult-content-switch"
-                                            checked={adultContent}
-                                            onChange={(e) => handleAdultContentToggle(e.target.checked)}
-                                            className="adult-content-switch"
-                                        />
-                                    </div>
                                 </Form.Group>
 
                                 {/* Info Tambahan */}

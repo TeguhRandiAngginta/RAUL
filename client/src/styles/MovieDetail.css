@@ -95,3 +95,46 @@
     color: #ffc107;
     text-decoration: underline;
 }
+
+.review-menu {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 20;
+}
+
+/* icon titik 3 */
+.review-menu-toggle {
+    cursor: pointer;
+    color: #aaa;
+    padding: 4px;
+}
+
+/* hover effect halus */
+.review-menu-toggle:hover {
+    color: #ffc107;
+}
+
+/* HAPUS caret segitiga bootstrap */
+.review-menu-toggle::after {
+    display: none !important;
+}
+
+/* HAPUS background / border bawaan */
+.review-menu .dropdown-toggle {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* rapihin menu */
+.review-menu .dropdown-menu {
+    min-width: 140px;
+}
+
+.review-stars {
+    position: relative;
+    top: -3px; /* ubah jadi -2px / -4px sesuai selera */
+}
+
+

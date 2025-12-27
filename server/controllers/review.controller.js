@@ -65,7 +65,8 @@ export const createReview = async (req, res, next) => {
                         _id: result.insertedId,
                         user: {
                                 _id: user._id,
-                                username: user.username
+                                username: user.username,
+                                displayName: user.displayName
                         }
                 });
 
@@ -101,7 +102,8 @@ export const getReviewsForMovie = async (req, res, next) => {
                                         createdAt: 1,
                                         updatedAt: 1,
                                         'user._id': 1,
-                                        'user.username': 1
+                                        'user.username': 1,
+                                        'user.displayName': 1
                                 }
                         },
                         { $sort: { createdAt: -1 } }
